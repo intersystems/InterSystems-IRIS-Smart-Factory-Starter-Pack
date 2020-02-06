@@ -1,0 +1,179 @@
+{
+	"info": {
+		"_postman_id": "47b5cdbb-8f23-4cf3-88cb-f78180d85f40",
+		"name": "Vlisco",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "InterSystems API management",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseURL}}/api/mgmnt/v2/",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"mgmnt",
+						"v2",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "OPC UA  API management",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseURL}}/api/mgmnt/v2/VLISCO/opc.ua.rest",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"mgmnt",
+						"v2",
+						"VLISCO",
+						"opc.ua.rest"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Add DataChanged Notification wrong equipment",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\n}"
+				},
+				"url": {
+					"raw": "{{baseURL}}/api/opc/ua/equipment/wrongequipment/wrongconfiguration",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"opc",
+						"ua",
+						"equipment",
+						"wrongequipment",
+						"wrongconfiguration"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Add DataChanged Notification wrong configuration",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\n}"
+				},
+				"url": {
+					"raw": "{{baseURL}}/api/opc/ua/equipment/MiloTestServer/wrongconfiguration",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"opc",
+						"ua",
+						"equipment",
+						"MiloTestServer",
+						"wrongconfiguration"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Add DataChanged Notification with empty body",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\n}"
+				},
+				"url": {
+					"raw": "{{baseURL}}/api/opc/ua/equipment/MiloTestServer/MiloConfig",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"opc",
+						"ua",
+						"equipment",
+						"MiloTestServer",
+						"MiloConfig"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Add DataChanged Notification with body",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"timestamp\": \"2020-01-31 12:03:23.200000\",\n\t\"nodes\": [ {\n\t\t\t\t\t\"nodeid\": \"ns=2;s=Dynamic/RandomInt64\",\n\t\t\t\t\t\"nodevalue\": -8814383624847064391\n\t\t\t\t},\n\t\t\t\t{\n\t\t\t\t\t\"nodeid\": \"ns=2;s=Dynamic/RandomDouble\",\n\t\t\t\t\t\"nodevalue\": 0.6347237427646675\n\t\t\t\t}\n\t\t\t ]\n}"
+				},
+				"url": {
+					"raw": "{{baseURL}}/api/opc/ua/equipment/MiloTestServer/MiloConfig",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"opc",
+						"ua",
+						"equipment",
+						"MiloTestServer",
+						"MiloConfig"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}

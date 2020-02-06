@@ -3,12 +3,13 @@ import logging
 import clientsubscription
 
 
-def execute(opc_server_url=None, subscription_nodes=None, polling_interval=1000, log_level=logging.INFO, log_file=None):
+def execute(opc_server_url=None, rest_server_url=None, subscription_nodes=None, polling_interval=1000, log_level=logging.INFO, log_file=None):
 
     """
     Execute the subscription
     Param:
         opc_server_url      - the url to the opc ua server (example: opc.tcp://milo.digitalpetri.com:62541/milo)
+        rest_server_url     - the url to the REST server to post readings to
         subscription_nodes  - list of nodes to subscribe on
         polling_interval    - polling interval to the opc ua server in milliseconds
         log_level           - default to INFO
@@ -18,6 +19,7 @@ def execute(opc_server_url=None, subscription_nodes=None, polling_interval=1000,
 
         # Set the client subscription
         clientsubscription.set_logging(log_level, log_file)
+        clientsubscription.URL = rest_server_url
 
         # Get the event loop for this thread. When the loop is
         # closed create a new event loop for this thread

@@ -8,7 +8,6 @@ Property Name As %String [ Required ];
 /// Description of the machine type
 Property Description As %String(MAXLEN = 1000);
 
-
 Storage Default
 {
 <Data name="EquipmentTypeDefaultData">

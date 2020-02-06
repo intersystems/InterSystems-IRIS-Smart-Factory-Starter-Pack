@@ -1,3 +1,8 @@
+Class opc.ua.rest.spec Extends %REST.Spec [ ProcedureBlock ]
+{
+
+XData OpenAPI [ MimeType = application/json ]
+{
 {
   "swagger": "2.0",
   "info": {
@@ -102,4 +107,7 @@
       ]
     }
   }
+}
+}
+
 }

@@ -12,7 +12,6 @@ Relationship Configuration As opc.ua.config.Configuration [ Cardinality = one, I
 
 Index ConfigurationIndex On Configuration;
 
-
 Storage Default
 {
 <Data name="EquipmentConfigurationDefaultData">

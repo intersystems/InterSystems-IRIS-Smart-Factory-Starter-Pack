@@ -1,11 +1,12 @@
-include Ensemble 
+Include Ensemble
 
 /// Stream utility class 
 Class opc.ua.util.StreamUtils Extends %RegisteredObject
 {
 
 /// Write Stream to LogInfo
-ClassMethod writeStreamToLogInfo(pStream As %Stream) As %Status {
+ClassMethod writeStreamToLogInfo(pStream As %Stream) As %Status
+{
 		
 	$$$LOGINFO("====== Start stream output ======")	
 	
@@ -21,7 +22,8 @@ ClassMethod writeStreamToLogInfo(pStream As %Stream) As %Status {
 }
 
 /// Write Stream to Trace
-ClassMethod writeStreamToTrace(pStream As %Stream) As %Status {
+ClassMethod writeStreamToTrace(pStream As %Stream) As %Status
+{
 		
 	$$$TRACE("====== Start stream output ======")	
 	

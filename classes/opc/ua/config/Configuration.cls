@@ -6,7 +6,7 @@ Class opc.ua.config.Configuration Extends %Persistent
 Property Name As %String [ Required ];
 
 /// Description of the configuration
-Property Description As %String ( MAXLEN = 1000);
+Property Description As %String(MAXLEN = 1000);
 
 /// Version of the configuration
 Property Version As %String;

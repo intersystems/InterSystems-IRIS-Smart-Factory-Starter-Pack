@@ -1,9 +1,16 @@
 import sys
 import asyncio
 import logging
-import constants
+import datetime
+import json
+
+import requests
 
 from asyncua import Client, Node, ua
+
+import constants
+
+# =====
 
 sys.path.insert(0, "..")
 
@@ -14,6 +21,17 @@ _logger = logging.getLogger('opcua')
 logging.basicConfig(level=logging.ERROR)
 is_logger_configured = False
 
+
+# URL to REST server to post readings to; configured by
+# subscriptionexecutor.
+URL = ""
+
+
+# Collected reading, to be sent when the next timestamp is received
+readings = []
+
+
+
 class SubscriptionHandler:
     """
     The SubscriptionHandler is used to handle the data that is received for the subscription.
@@ -23,7 +41,40 @@ class SubscriptionHandler:
         Callback for subscription.
         This method will be called when the Client received a data change message from the Server.
         """
+
         _logger.info('datachange_notification %r %s', node, val)
+
+        if isinstance(val, datetime.datetime):
+            # _logger.info('time: %s', val.isoformat())
+            # _logger.info(f"{val.isoformat()} {readings}")
+            
+            # Temporary: many timestamp readings arrive when no actual values have changed
+            # if not readings:
+            #     _logger.info("[Skipping POST as no new readings are available.]")
+            #     return
+            
+            payload = {
+                "timestamp": val.isoformat(), 
+                "nodes": [{"nodeid": k, "nodevalue": v} for k, v in readings]
+            }
+            payload = json.dumps(payload)
+            _logger.info(payload)
+
+            try:
+                r = requests.post(URL, data=payload, headers={"Content-Type": "application/json"})
+                if r.text: _logger.info(str(r.text))
+            except requests.exceptions.RequestException:
+                _logger.exception("Posting raised an exception")
+
+            readings.clear()
+
+        else:
+            # _logger.info('data: %s=%s', node.nodeid.Identifier, val[0])
+            id = node.nodeid
+            readings.append((f"ns={id.NamespaceIndex};s={id.Identifier}", val[0]))
+
+
+
 
 
 def set_logging(log_level=logging.INFO, log_file=None):

@@ -4,7 +4,7 @@ Class opc.ua.service.SubscriptionService Extends Ens.BusinessService
 
 Parameter ADAPTER = "Ens.InboundAdapter";
 
-Parameter SETTINGS = "Connection:OPC:,Equipment:OPC:,Configuration:OPC:,PollingInterval:OPC:,PythonTemplatePath:OPC:,LogFilePath:OPC,TargetConfigNames:Basic:selector?context={Ens.ContextSearch/ProductionItems?targets=1&productionName=@productionId}";
+Parameter SETTINGS = "Connection:OPC,RESTApplication:OPC,Equipment:OPC:,Configuration:OPC:,PollingInterval:OPC:,PythonTemplatePath:OPC:,LogFilePath:OPC,TargetConfigNames:Basic:selector?context={Ens.ContextSearch/ProductionItems?targets=1&productionName=@productionId}";
 
 /// The target for the trigger.
 Property TargetConfigNames As %String;
@@ -16,25 +16,32 @@ Property Equipment As %String;
 Property Configuration As %String;
 
 /// Property python template path 
-Property PythonTemplatePath As %String(MAXLEN=2048);
+Property PythonTemplatePath As %String(MAXLEN = 2048);
 
 /// Connection string to the OPC UA server.
 /// Example: opc.tcp://<host>:<port>
 Property Connection As %String(MAXLEN = 100);
 
+/// REST application to POST the received readings to.
+/// Example: http://localhost:52773/api/opc/ua/equipment
+/// The equipment and configuration will be appended to the URL.
+Property RESTApplication As %String(MAXLEN = 100);
+
 /// OPC subscription polling interval in milliseconds
-Property PollingInterval As %Integer[InitialExpression = 1000];
+Property PollingInterval As %Integer [ InitialExpression = 1000 ];
 
 /// Log file path
-Property LogFilePath As %String(MAXLEN=2048);
+Property LogFilePath As %String(MAXLEN = 2048);
 
 /// Process the input
-Method OnProcessInput(pInput As %RegisteredObject, pOutput As %RegisteredObject) As %Status{
+Method OnProcessInput(pInput As %RegisteredObject, pOutput As %RegisteredObject) As %Status
+{
 		
 	$$$LOGINFO("Start OPC UA client connection to ["_..Connection_"] for equipment ["_..Equipment_"]")
 	
 	/// Check if equipment, configuration and connection value has been configured
-	if ((..Equipment '= "") && (..Configuration '= "") && (..Connection '= "") && (..PythonTemplatePath '= "")) { 
+	if ((..Equipment '= "") && (..Configuration '= "") && (..Connection '= "")
+	  && (..PythonTemplatePath '= "") && (..RESTApplication '= "")) { 
 		
 		/// Search the equipment by Name
 		#dim tEquipment As opc.ua.config.Equipment
@@ -82,7 +89,8 @@ Method OnTearDown() As %Status
 }
 
 /// Execute the python code
-Method ExecutePythonCode(pCode As %ListOfDataTypes) As %Status {
+Method ExecutePythonCode(pCode As %ListOfDataTypes) As %Status
+{
 	
 	if (pCode '= "") {
 		$$$TRACE("Lines of code ["_pCode.Count()_"]")
@@ -98,7 +106,7 @@ Method ExecutePythonCode(pCode As %ListOfDataTypes) As %Status {
 		}		
 	}
 	
-	return $$$OK	
+	return $$$OK
 }
 
 /// Generate the nodes for the python scripts
@@ -127,7 +135,9 @@ Method GeneratePythonCodeNodes(pEquipment As opc.ua.config.Equipment, pConfigura
 
 /// Generate the python template based on the input provided
 Method GeneratePythonCode(pEquipment As opc.ua.config.Equipment, pConfiguration As opc.ua.config.Configuration) As %Collection.ListOfDT
-{	
+{
+	; Add equipment and configuration to URL
+ 	Set RESTApp = ..RESTApplication_"/"_..Equipment_"/"_..Configuration
  	
  	#dim tTemplateCode As %List
  	set tTemplateCode = ##class(%ListOfDataTypes).%New()
@@ -151,7 +161,8 @@ Method GeneratePythonCode(pEquipment As opc.ua.config.Equipment, pConfiguration 
 					set line = $REPLACE(line, "##SUBSCRIPTIONNODES##", ..GeneratePythonCodeNodes(pEquipment, pConfiguration))
 					set line = $REPLACE(line, "##POLLINGINTERVAL##", ..PollingInterval)
 					set line = $REPLACE(line, "##LOGFILEPATH##", "'"_..LogFilePath_"'")
-										
+					set line = $REPLACE(line, "##RESTURL##", "'"_RESTApp_"'")
+					
 					do tTemplateCode.Insert(line)
 				 }
 				
@@ -162,7 +173,6 @@ Method GeneratePythonCode(pEquipment As opc.ua.config.Equipment, pConfiguration 
 	}	
 
 	return tTemplateCode
-	
 }
 
 /// To draw connections for the Dynamic setting TargetConfigNames in the management portal, this method will be called.
