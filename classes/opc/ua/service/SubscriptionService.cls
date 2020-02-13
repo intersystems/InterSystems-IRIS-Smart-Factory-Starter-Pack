@@ -36,44 +36,38 @@ Property LogFilePath As %String(MAXLEN = 2048);
 /// Process the input
 Method OnProcessInput(pInput As %RegisteredObject, pOutput As %RegisteredObject) As %Status
 {
-		
 	$$$LOGINFO("Start OPC UA client connection to ["_..Connection_"] for equipment ["_..Equipment_"]")
 	
 	/// Check if equipment, configuration and connection value has been configured
 	if ((..Equipment '= "") && (..Configuration '= "") && (..Connection '= "")
 	  && (..PythonTemplatePath '= "") && (..RESTApplication '= "")) { 
 		
-		/// Search the equipment by Name
-		#dim tEquipment As opc.ua.config.Equipment
-		set tEquipment = ##class(opc.ua.config.Equipment).SearchByName(..Equipment)	
-		
-		if (tEquipment '= "") {
-			
-			#dim tConfiguration As opc.ua.config.Configuration
-			set tConfiguration = tEquipment.SearchCurrentConfigurationByName(..Configuration)
-					
-			if (tConfiguration '= "") {
-		
-				/// Check if machine class definition is available
-				if ('tEquipment.IsClassDefinitionAvailable(tConfiguration.Name)) {
-					$$$LOGINFO("Class definition is not available for this combination of equipment ["_..Equipment_"] and configuration ["_..Configuration_"]")
-					$$$LOGINFO("Generating class definition for equipment ["_..Equipment_"] and configuration ["_..Configuration_"]")
-					set sc = tEquipment.GenerateClassDefinition(tConfiguration.Name)
-					return:$$$ISERR(sc) sc
-				}
-				
-				/// Get python template 
-				set tPythonCode = ..GeneratePythonCode(tEquipment, tConfiguration)				
-				if (tPythonCode '= "") {
-
-					/// Execute python code						
-					set sc = ..ExecutePythonCode(tPythonCode)
-					return:$$$ISERR(sc) sc
-					
-				}						
-				
-			}	
+		; Get object combining equipment with its configuration
+		#dim EquipCfg As opc.ua.config.EquipmentConfiguration
+		set EquipCfg = ##class(opc.ua.config.EquipmentConfiguration).Get(..Equipment, "staging", ..Configuration, .sc)		
+		if 'sc {
+			$$$LOGERROR("Staging equipment configuration error for ["_..Equipment_"]") 
+			return sc
 		}	
+		
+		set ClassName = ##class(opc.ua.data.Generator).GetClassName(EquipCfg, .Exists)
+		if 'Exists {
+			$$$LOGINFO("Class definition is not available for this combination of equipment ["_..Equipment_"] and configuration ["_..Configuration_"]")
+			$$$LOGINFO("Generating class definition for equipment ["_..Equipment_"] and configuration ["_..Configuration_"]")
+			set sc = ##class(opc.ua.data.Generator).Generate(EquipCfg)
+			if 'sc return sc
+		}
+		
+		/// Get python template 
+		set tPythonCode = ..GeneratePythonCode(EquipCfg.Equipment, EquipCfg.Configuration)				
+		if (tPythonCode '= "") {
+			/// Execute python code						
+			set sc = ..ExecutePythonCode(tPythonCode)
+			return:$$$ISERR(sc) sc
+		}
+		
+		$$$LOGINFO("Returned from Python code.")
+		
 	} else {
 		$$$LOGERROR("One or more required fields are not configured [Equipment, Configuration, Connection or PythonTemplatePath]")
 	}
@@ -84,7 +78,6 @@ Method OnProcessInput(pInput As %RegisteredObject, pOutput As %RegisteredObject)
 /// Teardown the subscription service before this business service is stopped
 Method OnTearDown() As %Status
 {
-	
 	return $$$OK
 }
 
@@ -115,7 +108,7 @@ Method GeneratePythonCodeNodes(pEquipment As opc.ua.config.Equipment, pConfigura
 	set tNodeString = ""
 	set tIsFirst = 1
 	
-	set tNodeList = pEquipment.GetNodesForConfiguration(pConfiguration.Name)
+	set tNodeList = pEquipment.GetNodesForConfiguration(pConfiguration.Name, "staging")
 	for i=1:1:tNodeList.Count() {
 		
 		#dim tNode As opc.ua.config.Node

@@ -2,7 +2,7 @@ Include Ensemble
 
 /// This is an OPC UA server callback service of InterSystems. This functionality is used when data notifications from subscriptions needs to be inserted in InterSystems<br/>
 /// Business logic class defined by OpenAPI in opc.ua.rest.spec<br/>
-/// Updated Feb 3, 2020 13:20:08
+/// Updated Feb 10, 2020 14:56:43
 Class opc.ua.rest.impl Extends %REST.Impl [ ProcedureBlock ]
 {
 
@@ -16,72 +16,72 @@ Parameter ExposeServerExceptions = 1;
 ///     body, Data notification to be stored for specified equipment<br/>
 ClassMethod addDataChangeNotification(equipment As %String, configuration As %String, body As %DynamicObject) As %DynamicObject
 {
+	Set $ZTrap = "Error"
 	
-	/// Step 1: Check content type
-	if (..%GetContentType() '= "application/json") {
-		do ..%SetStatusCode("405")
-		return ##class(opc.ua.rest.Error).GenerateErrorInJSON(405,"Only application/json content-type allowed")
+	/// Check content type
+	if ..%GetContentType() '= "application/json" {
+		return ..ReturnError(405, "Only application/json content-type allowed")
 	}	
 	
-	/// Step 2: Search the equipment by name
-	#dim tEquipment As opc.ua.config.Equipment
-	set tEquipment = ##class(opc.ua.config.Equipment).SearchByName(equipment)
-	if (tEquipment = "") {
-		do ..%SetStatusCode("404")
-		return ##class(opc.ua.rest.Error).GenerateErrorInJSON(404,"Equipment ["_equipment_"] not found")		
-	}
-		
-	/// Step 3: Search the configuration by name
-	#dim tConfiguration As opc.ua.config.Configuration
-	set tConfiguration = tEquipment.SearchCurrentConfigurationByName(configuration)
-	if (tConfiguration = "") {
-		do ..%SetStatusCode("404")
-		return ##class(opc.ua.rest.Error).GenerateErrorInJSON(404,"Configuration ["_configuration_"] not found")		
+	; Get the equipment/configuration bridge class instance
+	#dim EquipCfg As opc.ua.config.EquipmentConfiguration
+	set EquipCfg = ##class(opc.ua.config.EquipmentConfiguration).Get(equipment, "staging", configuration)
+	if EquipCfg = "" {
+		return ..ReturnError(404, "Combo of equipment ["_equipment_"]/config ["_configuration_"] not found")
 	}
 	
-	/// Step 4: Get class name
-	if 'tEquipment.IsClassDefinitionAvailable(tConfiguration.Name) {
-		do ..%SetStatusCode("405")
-		return ##class(opc.ua.rest.Error).GenerateErrorInJSON(405,"ClassDef not found")
-	}
-		
-	set tClassName = tEquipment.GetClassDefinition(tConfiguration.Name)
+	; Get classname and check whether it exists
+	set ClassName = ##class(opc.ua.data.Generator).GetClassName(EquipCfg, .Exists)
+	if 'Exists return ..ReturnError(404, "Class '"_ClassName_"' not found", "No class for EquipmentConfig "_EquipCfg.%Id())
+	
+	; Get data in generated REST class
 	set tData = ##class(opc.ua.rest.Data).%New()
 	set sc = tData.%JSONImport(body)
-	if $$$ISERR(sc) {
-		$$$LOGERROR("Error loading input data: "_$System.Status.GetErrorText(sc))
-		return ##class(opc.ua.rest.Error).GenerateErrorInJSON(405,"Problem importing data")
-	}	
+	if $$$ISERR(sc) return ..ReturnError(400, "Problem importing data", "Error loading input data", sc)
 	
-	/// Step 5: Insert the data
-	set sc = $classmethod(tClassName, "Insert", tData, .RowId)
-	if $$$ISERR(sc) {
-		$$$LOGERROR("Error saving input data: "_$System.Status.GetErrorText(sc))
-		return ##class(opc.ua.rest.Error).GenerateErrorInJSON(405,"Problem storing data")
-	}
+	/// Insert the data
+	set sc = $classmethod(ClassName, "Insert", tData, .RowId)
+	if $$$ISERR(sc) return ..ReturnError(500, "Problem storing data", "Error saving input data", sc)
 	
-	set DataObj = $classmethod(tClassName, "%OpenId", RowId,, .sc)
-	if $$$ISERR(sc) {
-		$$$LOGERROR("Error opening stored data: "_$System.Status.GetErrorText(sc))
-		return ##class(opc.ua.rest.Error).GenerateErrorInJSON(405,"Problem opening data")
-	}
-	
-	/// Step 6: Send to DataService
+	/// Create Business Service
 	#dim bs As opc.ua.service.DataService
-	set sc = ##class(Ens.Director).CreateBusinessService(tEquipment.Name_"Data", .bs)
-	if $$$ISERR(sc) {
-		$$$LOGERROR("Error creating business service: "_$System.Status.GetErrorText(sc))
-		return ##class(opc.ua.rest.Error).GenerateErrorInJSON(405,"Problem creating business service")
-	}
+	set sc = ##class(Ens.Director).CreateBusinessService(EquipCfg.Equipment.Name_"Data", .bs)
+	if $$$ISERR(sc) return ..ReturnError(500, "Problem creating business service", "Error creating business service", sc)
 	
-	Set sc = bs.SendData(DataObj)
-	if $$$ISERR(sc) {
-		$$$LOGERROR("Error sending data: "_$System.Status.GetErrorText(sc))
-		return ##class(opc.ua.rest.Error).GenerateErrorInJSON(405,"Problem sending data")
-	}
+	; Send the data to next stage
+	Set sc = bs.SendData(RowId)
+	if $$$ISERR(sc) return ..ReturnError(500, "Problem sending data", "Error sending data", sc)
 	
-	do ..%SetStatusCode("201")	
+	; All went well, return HTTP status "201 Created"
+	do ..%SetStatusCode("201")
+		
 	return ""
+	
+Error
+	Set $ZTrap = ""
+	return ..ReturnError(500, "Internal server error", "Error trapped: "_$ZError)
+}
+
+// =====
+
+/// Returns an error to the caller. If ErrorStatus and/or LogMsg are specified,
+/// this information is logged in the Ensemble event log.
+ClassMethod ReturnError(HttpStatus As %String = "500", ReturnMsg As %String = "", ErrorStatus As %Status = "", LogMsg As %String = "") As %DynamicObject
+{
+	do ..%SetStatusCode(HttpStatus)
+	
+	; Add additional information, if present, to the event log
+	if ErrorStatus '= "" {
+		if LogMsg '= "" set LogMsg = LogMsg_": "
+		set LogMsg = LogMsg_$System.Status.GetErrorText(ErrorStatus)
+	}
+	if LogMsg '= "" {
+		$$$LOGWARNING(LogMsg)
+	}
+	
+	set Msg = ##class(opc.ua.rest.Error).GenerateErrorInJSON(HttpStatus, ReturnMsg)
+	
+	return Msg
 }
 
 }

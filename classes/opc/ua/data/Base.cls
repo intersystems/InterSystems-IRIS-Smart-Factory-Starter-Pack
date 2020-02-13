@@ -21,12 +21,9 @@ ClassMethod Insert(Input As opc.ua.rest.Data, Output Id As %String) As %Status
 		set Data(Node.NodeId) = Node.NodeValue
 	}
 	
-	; Save updated readings
-	set sc = ..SaveData(Input.TimeStamp, .Data)
+	; Save updated readings; this returns the id of the row that was inserted
+	set sc = ..SaveData(Input.TimeStamp, .Data, .Id)
 	if 'sc Quit sc
-	
-	; Return the id of the object we created
-	set Id = $g(%ROWID)
 	
 	quit $$$OK
 }

@@ -5,6 +5,9 @@ Class opc.ua.config.Configuration Extends %Persistent
 /// Name of the configuration
 Property Name As %String [ Required ];
 
+/// The type of configuration, corresponding to the 3 "stages"
+Property ConfigType As %String(VALUELIST = ",staging,transforming,serving") [ Required ];
+
 /// Description of the configuration
 Property Description As %String(MAXLEN = 1000);
 
@@ -21,7 +24,7 @@ Property EffectiveBegin As %TimeStamp;
 Property EffectiveEnd As %TimeStamp;
 
 /// Bridge property for many-to-many relationship to configuration
-Relationship ConfigurationMachine As opc.ua.config.EquipmentConfiguration [ Cardinality = many, Inverse = Configuration ];
+Relationship EquipmentConfiguration As opc.ua.config.EquipmentConfiguration [ Cardinality = many, Inverse = Configuration ];
 
 /// Bridge property for many-to-many relationship to tag
 Relationship ConfigurationNode As opc.ua.config.ConfigurationNode [ Cardinality = many, Inverse = Configuration ];
@@ -61,6 +64,9 @@ Storage Default
 </Value>
 <Value name="11">
 <Value>Description</Value>
+</Value>
+<Value name="12">
+<Value>ConfigType</Value>
 </Value>
 </Data>
 <DataLocation>^opc.ua.config.ConfigurationD</DataLocation>

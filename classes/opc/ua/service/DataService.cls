@@ -11,11 +11,10 @@ Property TargetConfigNames As %String;
 // =====
 
 /// Called from the REST service
-/// TODO: create a proper REST Business Service for this!
-Method SendData(DataObj As opc.ua.data.Base) As %Status
+Method SendData(DataObjId As %String) As %Status
 {
 	set Req = ##class(opc.ua.rest.impl.Request).%New()
-	set Req.Readings = DataObj
+	do Req.ReadingsSetObjectId(DataObjId)
 	
 	set sc = ..SendRequestAsync(..TargetConfigNames, Req)
 	if 'sc return sc

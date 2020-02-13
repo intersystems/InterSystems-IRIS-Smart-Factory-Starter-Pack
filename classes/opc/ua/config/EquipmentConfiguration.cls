@@ -8,9 +8,35 @@ Relationship Equipment As opc.ua.config.Equipment [ Cardinality = one, Inverse =
 Index EquipmentIndex On Equipment;
 
 /// Configuration many-to-many relationship	
-Relationship Configuration As opc.ua.config.Configuration [ Cardinality = one, Inverse = ConfigurationEquipment ];
+Relationship Configuration As opc.ua.config.Configuration [ Cardinality = one, Inverse = EquipmentConfiguration ];
 
 Index ConfigurationIndex On Configuration;
+
+// =====
+
+/// Returns the equipment configuration for the given combination of
+/// equipment name and (currently valid) configuration name.
+ClassMethod Get(EquipmentName As %String, ConfigType As %String, ConfigName As %String, Output Status As %Status) As opc.ua.config.EquipmentConfiguration
+{
+	&sql(SELECT ID INTO :Id FROM EquipmentConfiguration
+	      WHERE Equipment->Name = :EquipmentName
+	        AND Configuration->Name = :ConfigName
+	        AND Configuration->ConfigType = :ConfigType
+	        AND Configuration->IsCurrentVersion = 1)
+	
+	; Not found: done
+	if SQLCODE {
+		set Status = $$$ERROR($$$SQLError, SQLCODE, $Get(%msg))
+		return ""
+	}
+	
+	; Open; return error if this fails
+	set EquipmentConfig = ..%OpenId(Id, , .Status)
+	
+	return EquipmentConfig
+}
+
+// =====
 
 Storage Default
 {
