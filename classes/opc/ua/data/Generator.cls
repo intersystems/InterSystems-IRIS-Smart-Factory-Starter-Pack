@@ -44,7 +44,23 @@ Method GenerateImpl() As %Status
 		set ..ClassDef = ##class(%Dictionary.ClassDefinition).%New(ClassName, 25)
 		set ..ClassDef.Super = "opc.ua.data.Base"		
 	}
-		
+	
+	
+  ; Generate XMLTYPE from equipment, stage (configtype), and configuration
+  ; This will make the type always unique.
+  set XmlType = ..Config.Equipment.Name
+    _"."_..Config.Configuration.ConfigType
+    _"."_..Config.Configuration.Name
+  #dim ParmDef As %Dictionary.ParameterDefinition
+  set ParmDef = ..GetElement(..ClassDef.Parameters, "XMLTYPE")
+  set ParmDef.Default = XmlType
+  
+  ; Generate XMLNAME to configure the top-level node. Only XMLTYPE does
+  ; not work on import.
+  set ParmDef = ..GetElement(..ClassDef.Parameters, "XMLNAME")
+  set ParmDef.Default = XmlType
+	
+	
 	; Get list of opc.ua.config.Node objects
 	set Nodes = ..Config.Configuration.ConfigurationNode
 	set NodeList = ##class(%ListOfDataTypes).%New()
@@ -100,7 +116,7 @@ Method GenerateSaveDataMethod(Nodes As %ListOfObjects) As %Status
 	set md = ..GetElement(..ClassDef.Methods, "SaveData")
 	set md.ClassMethod = 1
 	set md.ReturnType = "%Status"
-	set md.FormalSpec = "TimeStamp:%TimeStamp,&Data:%String"
+	set md.FormalSpec = "TimeStamp:%TimeStamp,&Data:%String,*RowId:%BigInt"
 	set md.Description = "Generated code, do not change."
 	
 	set Names = "TimeStamp"
@@ -125,7 +141,8 @@ Method GenerateSaveDataMethod(Nodes As %ListOfObjects) As %Status
 	$$$Write("  ("_Names_")")
 	$$$Write("  VALUES")
 	$$$Write("  ("_Values_"))")
-	$$$Write("If SQLCODE Quit $$$ERROR($$$SQLError,SQLCODE,$g(%msg))")
+	$$$Write("Set RowId=%ROWID") 
+	$$$Write("if SQLCODE Quit $$$ERROR($$$SQLError,SQLCODE,$g(%msg))")
 	$$$Write("Quit $$$OK")
 	
 	set sc = md.%Save()
@@ -246,7 +263,7 @@ ClassMethod GetElement(Collection As %Collection.ListOfObj, Name As %String) As 
 /// Returns the IRIS type for the input (node) datatype
 ClassMethod GetIRISType(DataType As %String) As %String [ CodeMode = expression ]
 {
-$Case(DataType,"boolean":"%Boolean","integer":"%Integer","double":"%Double","float":"%Double","string":"%String","decimal":"%Decimal",:"%RawString")
+$Case(DataType,"timestamp":"%TimeStamp","time":"%Time","boolean":"%Boolean","integer":"%Integer","double":"%Double","float":"%Double","string":"%String","decimal":"%Decimal",:"%RawString")
 }
 
 }

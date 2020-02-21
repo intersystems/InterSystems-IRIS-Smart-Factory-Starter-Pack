@@ -3,7 +3,7 @@ Include Ensemble
 /// Equipment definition
 Class opc.ua.config.Equipment Extends (%Persistent, %JSON.Adaptor) [ DependsOn = opc.ua.config.Configuration ]
 {
-
+ 
 /// Name of the machine
 Property Name As %String [ Required ];
 
@@ -19,10 +19,14 @@ Property ClassPackage As %String [ InitialExpression = "opc.ua.data" ];
 /// Location of the machine
 Property Location As %String(MAXLEN = 100);
 
+/// Unit of Measurement of the equipment
+Property UoM As %String;
+
 /// Bridge property for many-to-many relationship
 Relationship EquipmentConfiguration As opc.ua.config.EquipmentConfiguration [ Cardinality = many, Inverse = Equipment ];
 
 Index EquipmentNameIndex On Name [ Unique ];
+
 
 /// Get the equipment by specifying the name
 ClassMethod SearchByName(pName As %String, Output Status As %Status) As opc.ua.config.Equipment
@@ -116,6 +120,9 @@ Storage Default
 </Value>
 <Value name="6">
 <Value>Location</Value>
+</Value>
+<Value name="7">
+<Value>UoM</Value>
 </Value>
 </Data>
 <DataLocation>^opc.ua.config.EquipmentD</DataLocation>

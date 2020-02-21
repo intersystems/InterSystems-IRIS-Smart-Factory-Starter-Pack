@@ -18,7 +18,7 @@ Property NodeId As %String;
 Property DatabaseAttribute As %String;
 
 /// Database type of this node
-Property DatabaseType As %String(VALUELIST = ",string,integer,double,float,decimal,boolean") [ InitialExpression = "string" ];
+Property DatabaseType As %String(VALUELIST = ",string,integer,double,float,decimal,boolean,time,timestamp") [ InitialExpression = "string" ];
 
 /// Length of the property in the database
 Property DatabaseLength As %Integer;

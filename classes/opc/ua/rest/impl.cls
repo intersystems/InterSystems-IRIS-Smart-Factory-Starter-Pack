@@ -42,16 +42,16 @@ ClassMethod addDataChangeNotification(equipment As %String, configuration As %St
 	/// Insert the data
 	set sc = $classmethod(ClassName, "Insert", tData, .RowId)
 	if $$$ISERR(sc) return ..ReturnError(500, "Problem storing data", "Error saving input data", sc)
-	
+		
 	/// Create Business Service
 	#dim bs As opc.ua.service.DataService
 	set sc = ##class(Ens.Director).CreateBusinessService(EquipCfg.Equipment.Name_"Data", .bs)
 	if $$$ISERR(sc) return ..ReturnError(500, "Problem creating business service", "Error creating business service", sc)
-	
+		
 	; Send the data to next stage
 	Set sc = bs.SendData(RowId)
 	if $$$ISERR(sc) return ..ReturnError(500, "Problem sending data", "Error sending data", sc)
-	
+		
 	; All went well, return HTTP status "201 Created"
 	do ..%SetStatusCode("201")
 		
