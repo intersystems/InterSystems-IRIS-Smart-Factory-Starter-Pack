@@ -8,7 +8,6 @@ Property Format As %String(MAXLEN = 4);
 /// Description of the unit
 Property Description As %String(MAXLEN = "");
 
-
 Storage Default
 {
 <Data name="UoMDefaultData">

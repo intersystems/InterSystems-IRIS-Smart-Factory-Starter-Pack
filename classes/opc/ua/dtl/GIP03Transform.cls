@@ -11,15 +11,6 @@ XData DTL [ XMLNamespace = "http://www.intersystems.com/dtl" ]
 {
 <transform sourceClass='opc.ua.data.GIP03.staging.GIP03CONFIG' targetClass='opc.ua.data.GIP03.transforming.GIP03CONFIG' create='existing' language='objectscript' >
 <annotation>GIP03 transformation</annotation>
-<if condition='source.MachineStatus &apos;= source.PreviousReading.MachineStatus' >
-<annotation>IF previous sample MachineStatus &lt;&gt; new sample MachineStatus THEN Transfer value previous sample MachineStatus</annotation>
-<true>
-<assign value='source.MachineStatus' property='target.MachineStatusPreviousStatus' action='set' />
-</true>
-<false>
-<assign value='source.PreviousReading.MachineStatus' property='target.MachineStatusPreviousStatus' action='set' />
-</false>
-</if>
 <if condition='target.NewOrder = 1' >
 <true>
 <assign value='source.WerkOrder' property='target.WorkOrder' action='set' />
@@ -47,13 +38,17 @@ XData DTL [ XMLNamespace = "http://www.intersystems.com/dtl" ]
 <assign value='source."MT4_5"' property='target."MT4_5"' action='set' />
 <assign value='source."MT4_6"' property='target."MT4_6"' action='set' />
 <assign value='source."MT4_7"' property='target."MT4_7"' action='set' />
-<assign value='##class(opc.ua.util.FunctionSet).ConvertUTCtoLocal(source.TimeStamp,10)' property='target.DayLocal' action='set' />
-<assign value='source.PreviousReading.MachineStatus' property='target.MachineStatusPreviousSample' action='set' />
+<assign value='$SYSTEM.SQL.DAYOFMONTH(target.TimeStampLocal)' property='target.DayLocal' action='set' />
+<assign value='target.PreviousReading.MachineStatus' property='target.MachineStatusPreviousSample' action='set' />
 <assign value='$ZTIMEH($P(target.TimeStampLocal," ",2))' property='target.TimeLocal' action='set' />
 <assign value='source.Yards' property='target.ProducedQtyEquipment' action='set' />
+<assign value='$SYSTEM.SQL.DAYOFWEEK(target.TimeStampLocal)' property='target.DayIDLocal' action='set' />
 <trace value='"["_target.PreviousReading.TimeStamp_"] and MachineStatus ["_target.PreviousReading.MachineStatus_"]"' >
 <annotation>Read the latest Transforming reading for testing purpose</annotation>
 </trace>
+<assign value='source.VDoek / 10' property='target.ActualSpeedTotalProduction' action='set' />
+<assign value='##class(opc.ua.util.FunctionSet).TimeStampSubstract(source.PreviousReading.TimeStamp,source.TimeStamp,"ss")' property='target.DurationIncrement' action='set' />
+<assign value='##class(opc.ua.util.FunctionSet).GetRecipeName(source.RECEPTNAAM1,source.RECEPTNAAM2,source.RECEPTNAAM3,source.RECEPTNAAM4,source.RECEPTNAAM5)' property='target.Recipe' action='set' />
 </transform>
 }
 

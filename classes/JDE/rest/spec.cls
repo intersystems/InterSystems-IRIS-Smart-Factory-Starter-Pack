@@ -1,4 +1,4 @@
-Class JDE.spec Extends %REST.Spec [ ProcedureBlock ]
+Class JDE.rest.spec Extends %REST.Spec [ ProcedureBlock ]
 {
 
 XData OpenAPI [ MimeType = application/json ]
@@ -10,7 +10,7 @@ XData OpenAPI [ MimeType = application/json ]
     "version":"1.0.0",
     "title":"JDE workorderRouting"
   },
-  "basePath":"/jde",
+  "basePath":"/jdetest",
   "tags":[
     {
       "name":"JDE workorder",
@@ -42,11 +42,11 @@ XData OpenAPI [ MimeType = application/json ]
         "parameters":[
           {
             "in":"body",
-            "name":"body",
+            "name":"workorders",
             "description":"List of workorders",
             "required":true,
             "schema":{
-              "$ref":"#/definitions/WorkOrders"
+              "$ref":"#/definitions/workorders"
             }
           }
         ],
@@ -73,7 +73,7 @@ XData OpenAPI [ MimeType = application/json ]
     }
   },
   "definitions":{
-    "WorkOrders":{
+    "workorders":{
       "type":"array",
       "items":{
         "$ref":"#/definitions/workorder"

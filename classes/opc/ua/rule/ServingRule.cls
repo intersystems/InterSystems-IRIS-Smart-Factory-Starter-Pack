@@ -1,5 +1,5 @@
 /// 
-Class opc.ua.rule.TransformRule Extends Ens.Rule.Definition
+Class opc.ua.rule.ServingRule Extends Ens.Rule.Definition
 {
 
 Parameter RuleAssistClass = "EnsLib.MsgRouter.RuleAssist";
@@ -8,10 +8,10 @@ XData RuleDefinition [ XMLNamespace = "http://www.intersystems.com/rule" ]
 {
 <ruleDefinition alias="" context="EnsLib.MsgRouter.RoutingEngine" production="opc.ua.Production">
 <ruleSet name="" effectiveBegin="" effectiveEnd="">
-<rule name="">
-<constraint name="source" value="GIP03Data"></constraint>
+<rule name="Rules for Start Serving">
+<constraint name="msgClass" value="opc.ua.bp.GIP03Serving.GIP03ServingReq"></constraint>
 <when condition="1">
-<send transform="" target="GIP03Transform"></send>
+<send transform="" target="GIP03Serving"></send>
 <return></return>
 </when>
 </rule>

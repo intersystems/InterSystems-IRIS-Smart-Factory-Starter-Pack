@@ -6,6 +6,8 @@ Class opc.ua.data.Base Extends (%Persistent, %JSON.Adaptor, %XML.Adaptor) [ Abst
 /// Date/time of measurement
 Property TimeStamp As %TimeStamp [ SqlColumnNumber = 2 ];
 
+Index BitmapExtent [ Extent, Type = bitmap ];
+
 Index OnTimeStamp On TimeStamp;
 
 ClassMethod Insert(Input As opc.ua.rest.Data, Output Id As %String) As %Status
@@ -28,6 +30,33 @@ ClassMethod Insert(Input As opc.ua.rest.Data, Output Id As %String) As %Status
 	if 'sc Quit sc
 	
 	quit $$$OK
+}
+
+/// Get the last reading
+ClassMethod GetLastReading() As opc.ua.data.Base
+{
+	
+	; Dynamic query, to retrieve the correct reading 
+	set Query = ""
+	set Query = Query_"SELECT TOP 1 ID AS Result"
+	set Query = Query_"  FROM "_$$$comClassKeyGet(..%ClassName(1), $$$cCLASSsqlqualifiednameQ)
+	set Query = Query_" ORDER BY ID DESC"	
+	
+	$$$TRACE("Get last reading query ["_Query_"]")
+		
+	/// Is needed because giving a parameter in the ExecDirect and not using it in 
+	/// the query will result in and empty resultset.
+	#dim rs As %SQL.StatementResult
+	set rs = ##class(%SQL.Statement).%ExecDirect(, Query)		 
+	
+	if 'rs.%Next(.sc) {
+		$$$TRACE("Nothing found ["_$System.Status.GetErrorText(sc)_"]")
+		quit ""
+	}
+	
+	set ret = ##class(opc.ua.data.Base).%OpenId(rs.Result,,.sc)
+	if $$$ISERR(sc) $$$TRACE($System.Status.GetErrorText(sc))
+	return ret
 }
 
 /// Returns the previous reading
@@ -64,9 +93,6 @@ Method PreviousReadingGet() As opc.ua.data.Base
 	if $$$ISERR(sc) $$$TRACE($System.Status.GetErrorText(sc))
 	return ret
 }
-
-
-// TODO: Move to util.FunctionSet for general use. Object must be passed  
 
 /// Returns the average, in the given time period, for a reading value.
 /// The periode is a half-open interval: including start time, but excluding

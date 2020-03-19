@@ -3,7 +3,7 @@ Include Ensemble
 /// Equipment definition
 Class opc.ua.config.Equipment Extends (%Persistent, %JSON.Adaptor) [ DependsOn = opc.ua.config.Configuration ]
 {
- 
+
 /// Name of the machine
 Property Name As %String [ Required ];
 
@@ -22,11 +22,13 @@ Property Location As %String(MAXLEN = 100);
 /// Unit of Measurement of the equipment
 Property UoM As %String;
 
+/// Equipment Yields
+Property Yields As list Of Yield;
+
 /// Bridge property for many-to-many relationship
 Relationship EquipmentConfiguration As opc.ua.config.EquipmentConfiguration [ Cardinality = many, Inverse = Equipment ];
 
 Index EquipmentNameIndex On Name [ Unique ];
-
 
 /// Get the equipment by specifying the name
 ClassMethod SearchByName(pName As %String, Output Status As %Status) As opc.ua.config.Equipment
@@ -100,6 +102,19 @@ Method GetClassName(pConfigurationName As %String, Output Exists As %Boolean) As
 	return ClassName
 }
 
+/// Get the yield value
+Method GetYield(pName As %String) As %Double
+{
+	
+	for i=1:1:..Yields.Count() {
+		set tYield = ..Yields.GetAt(i)		
+		if tYield.Name = pName {
+			return tYield.Value
+		}
+	}
+	return 0
+}
+
 Storage Default
 {
 <Data name="EquipmentDefaultData">
@@ -123,6 +138,9 @@ Storage Default
 </Value>
 <Value name="7">
 <Value>UoM</Value>
+</Value>
+<Value name="8">
+<Value>Yields</Value>
 </Value>
 </Data>
 <DataLocation>^opc.ua.config.EquipmentD</DataLocation>

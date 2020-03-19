@@ -5,9 +5,7 @@ Parameter XMLTYPE = "GIP03.staging.GIP03CONFIG";
 
 Parameter XMLNAME = "GIP03.staging.GIP03CONFIG";
 
-/// Previous reading 
-/// TODO: Add to generator
-Property PreviousReading As opc.ua.data.GIP03.staging.GIP03CONFIG [ Calculated ];
+Property PreviousReading As opc.ua.data.GIP03.staging.GIP03CONFIG [ Transient ];
 
 Property "MT1_1" As %Integer;
 
