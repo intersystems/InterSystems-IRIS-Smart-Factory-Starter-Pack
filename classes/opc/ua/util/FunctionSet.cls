@@ -2,7 +2,7 @@ Include Ensemble
 
 /// This class contains a set of utility methods that can be used for metrics calculations 
 /// by Business Rules, DTL transforms and the like.
-Class opc.ua.util.FunctionSet Extends Ens.Rule.FunctionSet [ Abstract, ClassType = "", ProcedureBlock, System = 4 ]
+Class opc.ua.util.FunctionSet Extends Ens.Rule.FunctionSet [ Abstract, System = 4 ]
 {
 
 /* NOTE: the names of these function arguments are used by
@@ -35,17 +35,18 @@ ClassMethod ConvertUTCtoLocal(pUTCTimeStamp As %TimeStamp, pOutformat As %Intege
 /// millisecond: "ms"
 ClassMethod TimeStampSubstract(pTimeStamp1 As %TimeStamp, pTimeStamp2 As %TimeStamp, pOutputFormat As %String) As %Double [ Final ]
 {
-	return $System.SQL.DATEDIFF(pOutputFormat, pTimeStamp1, pTimeStamp2)
+	return $JUSTIFY($System.SQL.DATEDIFF(pOutputFormat, pTimeStamp1, pTimeStamp2),1,0)
 }
 
 /// Determine if there is a mispass
 /// BaseValue - is the value to measure the yield from
 /// Yield - yield for the basevalue
 /// CurValue - field to compare against the BaseValue
+/// -11 < (14 - 20) of -11 > (14 + 20)
 ClassMethod IsMisPass(pBaseValue As %Double, pYield As %Double, pCurValue As %Double) As %Boolean [ Final ]
 {
 	
-	if (pCurValue < (pBaseValue - pYield) || pCurValue > (pBaseValue + pYield)) {		
+	if ((pCurValue < (pBaseValue - pYield)) || (pCurValue > (pBaseValue + pYield))) {		
 		return 1
 	} else {		
 		return 0
@@ -56,6 +57,30 @@ ClassMethod IsMisPass(pBaseValue As %Double, pYield As %Double, pCurValue As %Do
 ClassMethod GetPersistentId(pObj As %Persistent) As %BigInt [ Final ]
 {
 	return pObj.%Id()
+}
+
+/// Get Equipment name
+ClassMethod GetEquipmentName(pEquipmentId As %BigInt) As %String [ Final ]
+{
+	&sql(SELECT Name INTO :tName FROM opc_ua_config.Equipment WHERE ID = :pEquipmentId)
+	if SQLCODE = 0 {
+		$$$TRACE("Found Equipment")
+		return tName
+	}
+	
+	return ""
+}
+
+/// Get MisPas Norm
+ClassMethod GetMisPasNorm(EquipmentID As %Integer, AttributeName As %String) As %Integer [ Final ]
+{
+	&sql(SELECT ID INTO :tId FROM opc_ua_config.MisPasNorm WHERE EquipmentID = :EquipmentID)
+	if SQLCODE = 0 {
+		$$$TRACE("Found Equipment MisPas Norm")
+		return $Property(##class(opc.ua.config.MisPasNorm).%OpenId(tId), AttributeName)
+	}
+
+	return ""
 }
 
 /// Retrieve Start time of the Shift
@@ -81,6 +106,17 @@ ClassMethod GetShiftId(pShiftIdentifier As %BigInt) As %Integer [ Final ]
 	return ""
 }
 
+ClassMethod GetShiftDescription(ShiftIdentifier As %BigInt) As %String [ Final ]
+{
+	&sql(SELECT Description INTO :tDescription FROM opc_ua_config.Shift WHERE ID = :ShiftIdentifier)
+	if SQLCODE = 0 {
+		$$$TRACE("Found shift description")
+		return tDescription
+	}
+	
+	return ""
+}
+
 ClassMethod IsShiftActive(pShiftIdentifier As %BigInt) As %Boolean [ Final ]
 {
 	&sql(SELECT Active INTO :tActive FROM opc_ua_config.Shift WHERE ID = :pShiftIdentifier)
@@ -91,8 +127,6 @@ ClassMethod IsShiftActive(pShiftIdentifier As %BigInt) As %Boolean [ Final ]
 	return 0 // Defaults to false when no value can be found
 }
 
-/// Get the current shift identifier. Shift times can be added in local time format. When this is True put 
-/// pConvertToLocalTimestamp to 1
 ClassMethod GetCurrentShiftId(pUTCTimeStamp As %TimeStamp, pConvertToLocalTimeStamp As %Boolean) As %BigInt [ Final ]
 {
 	
@@ -104,24 +138,136 @@ ClassMethod GetCurrentShiftId(pUTCTimeStamp As %TimeStamp, pConvertToLocalTimeSt
 		set tTimeStamp = ##class(opc.ua.util.FunctionSet).ConvertUTCToLocalTimeStamp(pUTCTimeStamp)
 	} 
 	
-	/// Get Time
-	set tTime = $ZTIME($ZDATETIMEH(tTimeStamp,3, 1),1)
+	/// Get Time in seconds
+	set tTime = $PIECE($ZDATETIMEH(tTimeStamp,3, 1),",",2)
 		
 	/// Get DayOfWeek
 	set tDayOfWeek =  $SYSTEM.SQL.DAYOFWEEK(tTimeStamp)
 	set tNextDayOfWeek = tDayOfWeek + 1
+	if (tNextDayOfWeek > 7) { 
+		set tNextDayOfWeek = 1
+	}
+		
 	$$$TRACE("Day of week ["_tDayOfWeek_"]")
+	$$$TRACE("Next day of week ["_tNextDayOfWeek_"]")	
 	
-	&sql(SELECT ID INTO :id from opc_ua_config.Shift 
-	     WHERE ((StartDayOfWeek = :tDayOfWeek and EndDayOfWeek = :tDayOfWeek) 
-	     OR (StartDayOfWeek = :tDayOfWeek and EndDayOfWeek = :tNextDayOfWeek))
-	     AND StartTime <= current_time AND EndTime >= current_time
-	     AND ValidFrom <= current_date AND ValidTo >= current_date)
+	/// &sql(SELECT ID INTO :id from opc_ua_config.Shift 
+	///     WHERE ((StartDayOfWeek = :tDayOfWeek and EndDayOfWeek = :tDayOfWeek) 
+	///     OR (StartDayOfWeek = :tDayOfWeek and EndDayOfWeek = :tNextDayOfWeek))
+	///     AND StartTime <= current_time AND EndTime >= current_time
+	///     AND ValidFrom <= current_date AND ValidTo >= current_date)
+	&sql(SELECT ID INTO :id FROM opc_ua_config.Shift
+	     WHERE ((StartDayOfWeek = :tDayOfWeek AND EndDayOfWeek = :tDayOfWeek 
+	            AND StartTime <= :tTime AND EndTime >= :tTime)
+	        OR (StartDayOfWeek = :tDayOfWeek AND EndDayOfWeek = :tNextDayOfWeek
+	            AND StartTime <= :tTime AND :tTime BETWEEN CAST('22:00:00' AS TIME) AND CAST('23:59:59' AS TIME))
+	        OR (StartDayOfWeek = :tDayOfWeek AND EndDayOfWeek = :tNextDayOfWeek
+	            AND EndTime >= :tTime AND :tTime BETWEEN CAST('00:00:00' AS TIME) AND CAST('05:59:59' AS TIME)))
+	        AND (ValidFrom <= current_date AND ValidTo >= current_date))            
 	IF SQLCODE=0 {
 		$$$TRACE("Found shift "_id)
 	}
 	
 	return id
+}
+
+/// Retrieve OEEBenchMark OCAP color 
+/// Object - Benchmark Object name to search for
+/// OCAPVal - Determine the OCAP color on the specified value
+ClassMethod GetOEEBenchMarkOCAPColor(Object As %String, OCAPVal As %Float) As %String [ Final ]
+{
+	&sql(SELECT OCAP01, OCAP01Col, OCAP02, OCAP02Col, OCAP03, OCAP03Col, OCAP04, OCAP04Col, OCAP05, OCAP05Col, Search
+		 INTO :tOCAP01, :tOCAP01Col, :tOCAP02, :tOCAP02Col, :tOCAP03, :tOCAP03Col, :tOCAP04, :tOCAP04Col, :tOCAP05, :tOCAP05Col, :Search
+		 FROM opc_ua_config.OEEBenchMark 
+	     WHERE Object = :Object)
+	If SQLCODE Quit ""
+	
+	If Search = "ASC" {
+		IF (tOCAP01="") || (OCAPVal <= tOCAP01) {
+			return tOCAP01Col
+		} ELSEIF (tOCAP02="") || (OCAPVal <= tOCAP02) {
+			return tOCAP02Col
+		} ELSEIF (tOCAP03="") || (OCAPVal <= tOCAP03) {
+			return tOCAP03Col
+		} ELSEIF (tOCAP04="") || (OCAPVal <= tOCAP04) {
+			return tOCAP04Col
+		} ELSEIF (tOCAP05="") || (OCAPVal <= tOCAP05) {
+			return tOCAP05Col
+		}	
+		return ""
+	}
+	
+	; Descending
+	If (tOCAP01 = "") || (OCAPVal >= tOCAP01) Return tOCAP01Col
+	If (tOCAP02 = "") || (OCAPVal >= tOCAP02) Return tOCAP02Col
+	If (tOCAP03 = "") || (OCAPVal >= tOCAP03) Return tOCAP03Col
+	If (tOCAP04 = "") || (OCAPVal >= tOCAP04) Return tOCAP04Col
+	If (tOCAP05 = "") || (OCAPVal >= tOCAP05) Return tOCAP05Col
+	
+	return ""
+}
+
+/// Retrieve OEEBenchMark History
+ClassMethod GetOEEBenchMarkHistory(Object As %String) As %Float [ Final ]
+{
+	&sql(SELECT History INTO :val from opc_ua_config.OEEBenchMark 
+	     WHERE Object = :Object)
+	IF SQLCODE=0 {
+		return val
+	}
+	
+	return 0
+}
+
+/// Retrieve OEEBenchMark Target
+ClassMethod GetOEEBenchMarkTarget(Object As %String) As %Float [ Final ]
+{
+	&sql(SELECT Target INTO :val from opc_ua_config.OEEBenchMark 
+	     WHERE Object = :Object)
+	IF SQLCODE=0 {
+		return val
+	}
+	
+	return 0
+}
+
+/// Return the sum value for the given attribute
+/// Return the count value for the given attribute
+ClassMethod Sum(ClassName As %String, Attribute As %String) As %Float [ Final ]
+{
+	return $CLASSMETHOD(ClassName,"Sum",Attribute)
+}
+
+// for OEE Performance calculations
+
+/// Specific sum function that can only performed on the ...OEEShiftWorkOrder tabels
+/// [ ( OEEActualOutput 1 * OEEStandardCycleTime 1 ) 
+///     + ( OEEActualOutput 2 * OEEStandardCycleTime 2 )
+///     + ....… 
+///     + ( OEEActualOutput n * OEEStandardCycleTime n ) ]  
+ClassMethod SumOEEPerformance(ClassName As %String) As %Float [ Final ]
+{
+	return $CLASSMETHOD(ClassName,"SumOEEPerformance")
+}
+
+/// Specific sum function that can only performed on the ...OEEShiftWorkOrder tabels 
+/// for QEE Quality calculations
+/// [ ( (OEEActualOutput 1 -/- OEERejected Output 1 )  *  
+///               OEEStandardCycleTime 1 ) 
+///    + ( (OEEActualOutput 2 -/- OEERejected Output 2 )  *
+///             OEEStandardCycleTime 2 )
+///   + … 
+///    + ( (OEEActualOutput n -/- OEERejected Output n )  *
+///             OEEStandardCycleTime n)  ] 
+ClassMethod SumOEEQuality(ClassName As %String) As %Float [ Final ]
+{
+	return $CLASSMETHOD(ClassName, "SumOEEQuality")
+}
+
+/// Return the count value for the given attribute
+ClassMethod CountDistinct(ClassName, Attribute As %String) As %Float [ Final ]
+{
+	return $CLASSMETHOD(ClassName, "CountDistinct", Attribute)
 }
 
 /// Returns the average value, in the given time period, for the values
@@ -180,5 +326,9 @@ ClassMethod GetRecipeName(Parts... As %Integer) As %String [ Final ]
 	
 	return Result
 }
+
+/// Get the current shift identifier. Shift times can be added in local time format. When this is True put 
+
+/// pConvertToLocalTimestamp to 1
 
 }

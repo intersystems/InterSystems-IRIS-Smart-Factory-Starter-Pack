@@ -13,8 +13,7 @@ Property TargetConfigNames As %String;
 /// Called from the REST service
 Method SendData(DataObjId As %String) As %Status
 {
-	#dim Req As opc.ua.rest.impl.Request
-	set Req = ##class(opc.ua.rest.impl.Request).%New()
+	set Req = ##class(opc.ua.msg.TransformingReq).%New()
 	do Req.ReadingsSetObjectId(DataObjId)	
 	
 	set sc = ..SendRequestAsync(..TargetConfigNames, Req)

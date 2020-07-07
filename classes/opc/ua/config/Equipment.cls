@@ -1,35 +1,70 @@
 Include Ensemble
 
 /// Equipment definition
-Class opc.ua.config.Equipment Extends (%Persistent, %JSON.Adaptor) [ DependsOn = opc.ua.config.Configuration ]
+Class opc.ua.config.Equipment Extends (%Persistent, %JSON.Adaptor)
 {
 
 /// Name of the machine
-Property Name As %String [ Required ];
+Property Name As %String(%JSONFIELDNAME = "name") [ Required ];
 
 /// Description of the machine
-Property Description As %String(MAXLEN = 1000);
+Property Description As %String(%JSONFIELDNAME = "description", MAXLEN = 1000);
 
 /// Category of the equipment
-Property EquipmentType As opc.ua.config.EquipmentType;
+Property EquipmentType As opc.ua.config.EquipmentType(%JSONFIELDNAME = "equipment_type");
 
-/// Class package where the machine table will be generated
-Property ClassPackage As %String [ InitialExpression = "opc.ua.data" ];
+/// Class package where the equipment data, dtl, bp and routers will be generated. All client specific classes.
+Property ClassPackage As %String(%JSONFIELDNAME = "class_package") [ InitialExpression = "opc.clientdata" ];
 
 /// Location of the machine
-Property Location As %String(MAXLEN = 100);
+Property Location As %String(%JSONFIELDNAME = "location", MAXLEN = 100);
 
 /// Unit of Measurement of the equipment
-Property UoM As %String;
+Property UoM As %String(%JSONFIELDNAME = "uom");
 
 /// Equipment Yields
-Property Yields As list Of Yield;
+Property Yields As list Of Yield(%JSONFIELDNAME = "yields");
 
 /// Bridge property for many-to-many relationship
-Relationship EquipmentConfiguration As opc.ua.config.EquipmentConfiguration [ Cardinality = many, Inverse = Equipment ];
+Relationship EquipmentConfiguration As opc.ua.config.EquipmentConfiguration(%JSONINCLUDE = "None") [ Cardinality = many, Inverse = Equipment ];
 
 Index EquipmentNameIndex On Name [ Unique ];
 
+/// Check if configuration is already part of the equipment
+ClassMethod isConfigurationInEquipment(pEquipmentName As %String, pConfigurationName As %String) As %Boolean
+{
+	&sql(SELECT Equipment INTO :tEquipmentId FROM opc_ua_config.EquipmentConfiguration 
+	     WHERE Equipment->Name = :pEquipmentName 
+	     AND Configuration->Name = :pConfigurationName)
+	if (SQLCODE '= 0) {
+		return 0		
+	}    
+	
+	return 1
+}
+
+ClassMethod GetAllEquipment() As %ListOfObjects
+{
+	set tEquipmentList = ##class(%ListOfObjects).%New()
+	
+	&sql(DECLARE C1 CURSOR FOR
+        SELECT ID INTO :tEquipmentId FROM opc_ua_config.Equipment)	       
+    &sql(OPEN C1)
+    If SQLCODE '= 0 Quit tEquipmentList
+    &sql(FETCH C1)
+    while (SQLCODE = 0) {
+    	set tEquipment = ##class(opc.ua.config.Equipment).%OpenId(tEquipmentId,,.tSc)
+    	if ('$$$ISERR(tSc)) {
+    		Do tEquipmentList.Insert(tEquipment)    		
+    	}
+    &sql(FETCH C1)
+    }
+	&sql(CLOSE C1)
+		
+	return tEquipmentList
+}
+
+/// Get all equipment definitions
 /// Get the equipment by specifying the name
 ClassMethod SearchByName(pName As %String, Output Status As %Status) As opc.ua.config.Equipment
 {
@@ -41,6 +76,34 @@ ClassMethod SearchByName(pName As %String, Output Status As %Status) As opc.ua.c
 	}
 	
 	return tEquipment
+}
+
+/// Get equipment configurations
+/// Standaard get the current equipment configurations
+Method SearchEquipmentConfigurations(pIsCurrentVersion As %Boolean = 1, Output Status As %Status) As %ListOfObjects
+{
+	
+	set tConfigurationList = ##class(%ListOfObjects).%New()
+	set tName = ..Name
+		        
+	&sql(DECLARE C1 CURSOR FOR
+        SELECT Configuration->ID INTO :tConfigurationId
+	       FROM opc_ua_config.EquipmentConfiguration 
+	      WHERE Equipment->Name = :tName	        
+	        AND Configuration->IsCurrentVersion = :pIsCurrentVersion)	       
+    &sql(OPEN C1)
+    if SQLCODE '= 0 quit tConfigurationList
+    &sql(FETCH C1)
+    while (SQLCODE = 0) {
+    	set tConfiguration = ##class(opc.ua.config.Configuration).%OpenId(tConfigurationId,,.tSc)
+    	if ('$$$ISERR(tSc)) {
+    		Do tConfigurationList.Insert(tConfiguration)    		
+    	}
+    &sql(FETCH C1)
+    }
+	&sql(CLOSE C1)     
+	
+	return tConfigurationList
 }
 
 /// Get the current configuration by name of the equipment

@@ -1,4 +1,4 @@
-Class JDE.rest.spec Extends %REST.Spec [ ProcedureBlock ]
+Class JDE.rest.spec Extends %REST.Spec
 {
 
 XData OpenAPI [ MimeType = application/json ]

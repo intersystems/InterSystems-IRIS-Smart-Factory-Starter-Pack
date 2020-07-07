@@ -8,7 +8,7 @@ Method OnProcessInput(pInput As %Stream.Object, Output pOutput As %RegisteredObj
 	try {
 		set obj = {}.%FromJSON(pInput).WorkOrders
 
-		// Output holds the number of processed workorders.
+		// pOutput holds the number of processed workorders.
 		// If something goes wrong, we use it to return an error text.
 		set pOutput = 0
 		
@@ -28,9 +28,12 @@ Method OnProcessInput(pInput As %Stream.Object, Output pOutput As %RegisteredObj
 		}
 		// Return the number of workorders.
 		set pOutput = key
-		$$$TRACE("JDE Business Service received "_pOutput_" workorders")
-	} catch {
-		set pOutput = $system.Status.GetOneStatusText(st)
+		$$$LOGINFO("JDE Business Service received "_pOutput_" workorders")
+	} catch ex {
+ //		set msg = $system.Status.GetOneStatusText(st)
+ 		set msg = ex.DisplayString()
+		$$$LOGERROR(msg)
+		set pOutput = msg
 	}
 
 	quit $$$OK

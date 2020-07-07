@@ -50,47 +50,6 @@ XData ProductionDefinition
 <Production Name="opc.ua.Production" TestingEnabled="true" LogGeneralTraceEvents="true">
   <Description></Description>
   <ActorPoolSize>2</ActorPoolSize>
-  <Item Name="TransformRouter" Category="" ClassName="EnsLib.MsgRouter.RoutingEngine" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="true" Schedule="">
-    <Setting Target="Host" Name="BusinessRuleName">opc.ua.rule.TransformRule</Setting>
-    <Setting Target="Host" Name="ResponseFrom">*</Setting>
-  </Item>
-  <Item Name="GIP03Subscription" Category="Equipment" ClassName="opc.ua.service.SubscriptionService" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="true" Schedule="">
-    <Setting Target="Host" Name="Connection">opc.tcp://localhost:4980/Softing_dataFEED_OPC_Suite_Configuration1</Setting>
-    <Setting Target="Host" Name="Configuration">GIP03CONFIG</Setting>
-    <Setting Target="Host" Name="Equipment">GIP03</Setting>
-    <Setting Target="Host" Name="LogFilePath">c:\\InterSystems\\LOGS\\GIP03.log</Setting>
-    <Setting Target="Host" Name="PythonTemplatePath">c:\InterSystems\PYTHONCODE\templates\equipment_template.py</Setting>
-    <Setting Target="Host" Name="TargetConfigNames">TransformRouter</Setting>
-    <Setting Target="Adapter" Name="CallInterval">1</Setting>
-    <Setting Target="Host" Name="RESTApplication">http://localhost:52773/api/opc/ua/equipment</Setting>
-  </Item>
-  <Item Name="GIP03Data" Category="" ClassName="opc.ua.service.DataService" PoolSize="0" Enabled="true" Foreground="false" Comment="" LogTraceEvents="false" Schedule="">
-    <Setting Target="Host" Name="TargetConfigNames">TransformRouter</Setting>
-  </Item>
-  <Item Name="GIP03Transform" Category="Transform" ClassName="opc.ua.bp.GIP03Tranform" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="true" Schedule="">
-  </Item>
-  <Item Name="JDE.Service" Category="ERP" ClassName="JDE.Service" PoolSize="0" Enabled="true" Foreground="false" Comment="" LogTraceEvents="true" Schedule="">
-    <Setting Target="Host" Name="ArchiveIO">0</Setting>
-  </Item>
-  <Item Name="JDE.dtl.FilterWorkorder" Category="ERP" ClassName="JDE.dtl.FilterWorkorder" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="true" Schedule="">
-  </Item>
-  <Item Name="YardsDetermination" Category="" ClassName="opc.ua.bp.YardsDetermination" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="true" Schedule="">
-  </Item>
-  <Item Name="GIP03Serving" Category="" ClassName="opc.ua.bp.GIP03Serving" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="true" Schedule="">
-  </Item>
-  <Item Name="ServingRouter" Category="" ClassName="EnsLib.MsgRouter.RoutingEngine" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="true" Schedule="">
-    <Setting Target="Host" Name="BusinessRuleName">opc.ua.rule.ServingRule</Setting>
-    <Setting Target="Host" Name="ResponseFrom">*</Setting>
-    <Setting Target="Host" Name="ResponseTargetConfigNames"></Setting>
-  </Item>
-  <Item Name="GIP03ProcessOEEShift" Category="" ClassName="opc.ua.bp.GIP03ProcessOEEShift" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="false" Schedule="">
-  </Item>
-  <Item Name="GIP03ProcessOEEShiftTimeSlide" Category="" ClassName="opc.ua.bp.GIP03ProcessOEEShiftTimeSlide" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="false" Schedule="">
-  </Item>
-  <Item Name="GIP03ProcessOEEShiftWorkOrder" Category="" ClassName="opc.ua.bp.GIP03ProcessOEEShiftWorkOrder" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="true" Schedule="">
-  </Item>
-  <Item Name="GIP03ClearContent" Category="" ClassName="opc.ua.bp.GIP03ServingClearContent" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="false" Schedule="">
-  </Item>
 </Production>
 }
 

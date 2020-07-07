@@ -1,0 +1,571 @@
+{
+	"info": {
+		"_postman_id": "bf152b4e-f067-4d13-946a-3dfa4aac5e2b",
+		"name": "StarterPack",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Equipments",
+			"item": [
+				{
+					"name": "Add a new equipment",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "[\r\n    {\r\n        \"name\": \"MARCOMACHINE2\",\r\n        \"description\": \"MARCO machine\",\r\n        \"equipment_type\": {\r\n                \"name\": \"GIP\"            \r\n            },\r\n        \"uom\": \"YD\",\r\n        \"yields\": [\r\n            {\r\n                \"name\": \"test\",\r\n                \"value\": \"123\"\r\n            }    \r\n        ]\r\n    }\r\n\r\n]",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/equipment/equipments/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"equipment",
+								"equipments",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update an existing equipment",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n        \"name\": \"MARCOMACHINE2\",\r\n        \"description\": \"MARCO machine\",\r\n        \"equipment_type\": {\r\n                \"name\": \"GIP\"            \r\n            },\r\n        \"uom\": \"YD\",\r\n        \"yields\": [\r\n            {\r\n                \"name\": \"test\",\r\n                \"value\": \"123\"\r\n            }    \r\n        ]\r\n    }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/equipment/equipments/MARCOMACHINE2",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"equipment",
+								"equipments",
+								"MARCOMACHINE2"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add configuration to equipment",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/equipment/equipments/MARCOMACHINE2/configurations/GIP03OEESHIFT",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"equipment",
+								"equipments",
+								"MARCOMACHINE2",
+								"configurations",
+								"GIP03OEESHIFT"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Retrieve all equipment",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/equipment/equipments",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"equipment",
+								"equipments"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Retrieve equipment by name",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/equipment/equipments/GIP03",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"equipment",
+								"equipments",
+								"GIP03"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Retrieve current configuration for equipment by name",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/equipment/equipments/MARCOMACHINE2/configurations",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"equipment",
+								"equipments",
+								"MARCOMACHINE2",
+								"configurations"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Retrieve specific current version configuration for the equipment by name",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/equipment/equipments/GIP03/configurations/GIP03STAGING",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"equipment",
+								"equipments",
+								"GIP03",
+								"configurations",
+								"GIP03STAGING"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Configurations",
+			"item": [
+				{
+					"name": "Add a new configuration",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "[\r\n    {\r\n        \"name\": \"MARCOCONFIGTEST\",\r\n        \"config_type\": \"serving\",\r\n        \"description\": \"MARCOCONFIGTEST\",\r\n        \"version\": \"1\",\r\n        \"current_version\": true\r\n    }\r\n]",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/equipment/configurations/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"equipment",
+								"configurations",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update an existing configuration",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"MARCOCONFIGTEST\",\r\n    \"config_type\": \"serving\",\r\n    \"description\": \"MARCOCONFIGTEST\",\r\n    \"version\": \"1\",\r\n    \"current_version\": true,\r\n    \"standard_oee_fields\": true,\r\n    \"create_powerbi_dataset\": false\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/equipment/configurations/MARCOCONFIGTEST",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"equipment",
+								"configurations",
+								"MARCOCONFIGTEST"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add a specific node to the configuration",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"MARCOCONFIGTEST\",\r\n    \"config_type\": \"serving\",\r\n    \"description\": \"MARCOCONFIGTEST\",\r\n    \"version\": \"1\",\r\n    \"current_version\": true,\r\n    \"standard_oee_fields\": true,\r\n    \"create_powerbi_dataset\": false\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/equipment/configurations/MARCOCONFIGTEST/nodes/06081036-D766-487F-8F49-F890CCB53F7E",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"equipment",
+								"configurations",
+								"MARCOCONFIGTEST",
+								"nodes",
+								"06081036-D766-487F-8F49-F890CCB53F7E"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Retrieve all configurations",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/equipment/configurations",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"equipment",
+								"configurations"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Retrieve configation by name",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/equipment/configurations/MARCOCONFIGTEST",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"equipment",
+								"configurations",
+								"MARCOCONFIGTEST"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Retrieve nodes for specified configuration",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/equipment/configurations/MARCOCONFIGTEST/nodes",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"equipment",
+								"configurations",
+								"MARCOCONFIGTEST",
+								"nodes"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Nodes",
+			"item": [
+				{
+					"name": "Add a node",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "[\r\n    {\r\n        \"name\": \"MARCOTESTNODE\",\r\n        \"display_name\": \"MARCOTESTNODE\",\r\n        \"opc_ua_node\": \"ns=4;s=GIP03PLC0050-SV.MARCOTESTNODE\",\r\n        \"database_attribute\": \"MARCOTESTNODE\",\r\n        \"database_type\": \"integer\",\r\n        \"is_indexed\": false\r\n    }\r\n]    ",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/equipment/nodes/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"equipment",
+								"nodes",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update an existing node",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"UPDATEDMARCONODE\",\r\n    \"display_name\": \"UPDATEDMARCONODE\",\r\n    \"opc_ua_node\": \"ns=4;s=GIP03PLC0050-SV.MARCOTESTNODE\",\r\n    \"database_attribute\": \"UPDATEDMARCONODE\",\r\n    \"database_type\": \"integer\",\r\n    \"is_indexed\": false\r\n}\r\n  ",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/equipment/nodes/44A171C4-69DC-45B3-8E23-20177FA8419D",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"equipment",
+								"nodes",
+								"44A171C4-69DC-45B3-8E23-20177FA8419D"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Retrieve all nodes",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/equipment/nodes",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"equipment",
+								"nodes"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Retrieve node by GUID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/equipment/nodes/44A171C4-69DC-45B3-8E23-20177FA8419D",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"equipment",
+								"nodes",
+								"44A171C4-69DC-45B3-8E23-20177FA8419D"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "EquipmentTypes",
+			"item": [
+				{
+					"name": "Retrieve all equipmenttypes",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/equipment/equipmenttypes",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"equipment",
+								"equipmenttypes"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Yields",
+			"item": [
+				{
+					"name": "Retrieve all  yields",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/equipment/yields",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"equipment",
+								"yields"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Masterdata",
+			"item": [
+				{
+					"name": "Retrieve all shifts",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/masterdata/shifts",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"masterdata",
+								"shifts"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Retrieve all Unit Of Measurements",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/masterdata/uoms",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"masterdata",
+								"uoms"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Retrieve all OEE benchmarks",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/masterdata/oeebenchmarks",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"masterdata",
+								"oeebenchmarks"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		}
+	],
+	"protocolProfileBehavior": {}
+}

@@ -1,5 +1,8 @@
-Class JDE.data.filtered.Routing Extends (%Persistent, %XML.Adaptor, %JSON.Adaptor)
+/// JDE routing.
+Class JDE.data.Routing Extends (%Persistent, %JSON.Adaptor, %XML.Adaptor)
 {
+
+Parameter %JSONIGNOREINVALIDFIELD = 1;
 
 Property DocumentNumber As %Integer;
 
@@ -17,35 +20,35 @@ Property Description As %String;
 
 Property MessageNumber As %String;
 
-Property "DateOrder_Transaction" As %String;
+Property DateOrderTransaction As %String(%JSONFIELDNAME = "DateOrder_Transaction");
 
 Property DateStart As %String;
 
-Property "TimeScheduledStart_HH_MM_SS" As %Integer;
+Property TimeScheduledStartHHMMSS As %Integer(%JSONFIELDNAME = "TimeScheduledStart_HH_MM_SS");
 
 Property DateRequested As %String;
 
-Property "TimeScheduledEnd_HH_MM_SS" As %Integer;
+Property TimeScheduledEndHHMMSS As %Integer(%JSONFIELDNAME = "TimeScheduledEnd_HH_MM_SS");
 
 Property OperationStatusCodeWO As %String;
 
 Property DateCompletion As %String;
 
-Property "UnitsOrder_TransactionQuantity" As %Double;
+Property UnitsOrderTransactionQuantity As %Double(%JSONFIELDNAME = "UnitsOrder_TransactionQuantity");
 
 Property UnitsQuantityatOperation As %Double;
 
 Property QuantityShipped As %Double;
 
-Property "UnitsQuantityCanceled_Scrapped" As %Double;
+Property UnitsQuantityCanceledScrapped As %Double(%JSONFIELDNAME = "UnitsQuantityCanceled_Scrapped");
 
 Property TypeOfRouting As %String;
 
-Property "Parent_ShortItemNumber" As %Integer;
+Property ParentShortItemNumber As %Integer(%JSONFIELDNAME = "Parent_ShortItemNumber");
 
 Property Branch As %String;
 
-Property "3rdItemNumberKit" As %String;
+Property ThirdItemNumberKit As %String(%JSONFIELDNAME = "3rdItemNumberKit");
 
 Property DateUpdated As %String;
 
@@ -116,19 +119,19 @@ Storage Default
 <Value>MessageNumber</Value>
 </Value>
 <Value name="10">
-<Value>DateOrder_Transaction</Value>
+<Value>DateOrderTransaction</Value>
 </Value>
 <Value name="11">
 <Value>DateStart</Value>
 </Value>
 <Value name="12">
-<Value>TimeScheduledStart_HH_MM_SS</Value>
+<Value>TimeScheduledStartHHMMSS</Value>
 </Value>
 <Value name="13">
 <Value>DateRequested</Value>
 </Value>
 <Value name="14">
-<Value>TimeScheduledEnd_HH_MM_SS</Value>
+<Value>TimeScheduledEndHHMMSS</Value>
 </Value>
 <Value name="15">
 <Value>OperationStatusCodeWO</Value>
@@ -137,7 +140,7 @@ Storage Default
 <Value>DateCompletion</Value>
 </Value>
 <Value name="17">
-<Value>UnitsOrder_TransactionQuantity</Value>
+<Value>UnitsOrderTransactionQuantity</Value>
 </Value>
 <Value name="18">
 <Value>UnitsQuantityatOperation</Value>
@@ -146,19 +149,19 @@ Storage Default
 <Value>QuantityShipped</Value>
 </Value>
 <Value name="20">
-<Value>UnitsQuantityCanceled_Scrapped</Value>
+<Value>UnitsQuantityCanceledScrapped</Value>
 </Value>
 <Value name="21">
 <Value>TypeOfRouting</Value>
 </Value>
 <Value name="22">
-<Value>Parent_ShortItemNumber</Value>
+<Value>ParentShortItemNumber</Value>
 </Value>
 <Value name="23">
 <Value>Branch</Value>
 </Value>
 <Value name="24">
-<Value>3rdItemNumberKit</Value>
+<Value>ThirdItemNumberKit</Value>
 </Value>
 <Value name="25">
 <Value>DateUpdated</Value>
@@ -214,9 +217,9 @@ Storage Default
 </Data>
 <DataLocation>{%%PARENT}("Routing")</DataLocation>
 <DefaultData>RoutingDefaultData</DefaultData>
-<IdLocation>^JDE.data.filtered.WorkorderC("Routing")</IdLocation>
-<IndexLocation>^JDE.data.filtered.RoutingI</IndexLocation>
-<StreamLocation>^JDE.data.filtered.RoutingS</StreamLocation>
+<IdLocation>^JDE.data.WorkorderC("Routing")</IdLocation>
+<IndexLocation>^JDE.data.RoutingI</IndexLocation>
+<StreamLocation>^JDE.data.RoutingS</StreamLocation>
 <Type>%Storage.Persistent</Type>
 }
 

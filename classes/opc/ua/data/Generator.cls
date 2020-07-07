@@ -11,7 +11,12 @@ Property ClassDef As %Dictionary.ClassDefinition;
 ClassMethod Generate(EquipmentConfiguration As opc.ua.config.EquipmentConfiguration) As %Status
 {
 	set Me = ..%New()
-	set Me.Config = EquipmentConfiguration
+	if $IsObject(EquipmentConfiguration) {
+		set Me.Config = EquipmentConfiguration
+	} Else {
+		; Support passing by id
+		do Me.ConfigSetObjectId(EquipmentConfiguration)
+	}
 	; Actual implementation in method
 	return Me.GenerateImpl()
 }
@@ -21,7 +26,7 @@ ClassMethod Generate(EquipmentConfiguration As opc.ua.config.EquipmentConfigurat
 ClassMethod GetClassName(EquipmentConfiguration As opc.ua.config.EquipmentConfiguration, Output Exists As %Boolean) As %String
 {
 	set Config = EquipmentConfiguration
-	set ClassName = Config.Equipment.ClassPackage
+	set ClassName = Config.Equipment.ClassPackage_".data"
 	  _"."_Config.Equipment.Name
 	  _"."_Config.Configuration.ConfigType
 	  _"."_Config.Configuration.Name
@@ -36,6 +41,7 @@ Method GenerateImpl() As %Status
 {
 	; Load/create the class definition
 	set ClassName = ..GetClassName(..Config, .Exists)
+	Write ClassName,!
 	if Exists {
 		set ..ClassDef = ##class(%Dictionary.ClassDefinition).%OpenId(ClassName, , .sc)
 		if 'sc return sc
@@ -45,8 +51,15 @@ Method GenerateImpl() As %Status
 		set ..ClassDef.Super = "opc.ua.data.Base"		
 	}
 	
+	; Add OEE fields?
+	If ..Config.Configuration.StandardOEEFields {
+		; Add, if not present, the properties for OEE via superclass
+		Set Super = $ListFromString(..ClassDef.Super)
+		If '$ListFind(Super, "opc.ua.data.OEE") Set ..ClassDef.Super = ..ClassDef.Super_",opc.ua.data.OEE"
+	}
+	
 	; Generate description for class
-	Set Desc = "Generated for:"_$$$EOL
+	Set Desc = "Generated at "_$ZDateTime($ZTimestamp, 3, 1)_" (UTC) for:"_$$$EOL
 	Set Desc = Desc_"- Equipment "_..Config.Equipment.Description_" (id "_..Config.Equipment.%Id()_")"_$$$EOL
 	Set Desc = Desc_"- Configuration "_..Config.Configuration.Description_" (id "_..Config.Configuration.%Id()_")"
 	Set ..ClassDef.Description = Desc
@@ -70,6 +83,9 @@ Method GenerateImpl() As %Status
 	set PropDef = ..GetElement(..ClassDef.Properties, "PreviousReading")
 	set PropDef.Type = ClassName
 	set PropDef.Transient = 1
+	; Turn off XML and JSON projections to prevent recursion
+	do PropDef.Parameters.SetAt("NONE", "XMLPROJECTION")
+	do PropDef.Parameters.SetAt("NONE", "%JSONINCLUDE")
 	
 	; Get list of opc.ua.config.Node objects
 	set Nodes = ..Config.Configuration.ConfigurationNode
@@ -116,11 +132,6 @@ Method GenerateImpl() As %Status
 	quit:$$$ISERR(sc) sc
 	
 	
-	; Generate the Ensemble components if not already present
-	set sc = ..GenerateEnsemble()
-	if 'sc quit sc
-	
-	
 	return $$$OK
 }
 
@@ -150,14 +161,27 @@ Method GenerateSaveDataMethod(Nodes As %ListOfObjects) As %Status
 		set Values = Values_","_":d("_Idx_")"
 	}
 	
+	; Timestamp to various local time fields
+	$$$Write("set Horolog = $ZDateTimeH(TimeStamp, 3)")
+	$$$Write("set HorologLocal = $ZDateTimeH(Horolog, -3)")
+	$$$Write("set TimeStampLocal = $ZDateTime(HorologLocal, 3, 1, 2)")
+	$$$Write("set YearLocal = $Piece(TimeStampLocal, ""-"", 1)")
+	$$$Write("set MonthLocal = +$Piece(TimeStampLocal, ""-"", 2)")
+	$$$Write("set DayLocal = +$ZDate(HorologLocal, 4)")
+	$$$Write("set WeekDayLocal = $ZDate(+HorologLocal, 10)")
+	$$$Write("set TimeLocal = $Piece(HorologLocal, "","", 2)")
+	
+	Set Names = Names_",TimeStampLocal,YearLocal,MonthLocal,DayLocal,WeekDayLocal,TimeLocal"
+	Set Values = Values_",:TimeStampLocal,:YearLocal,:MonthLocal,:DayLocal,:WeekDayLocal,:TimeLocal"
+	
 	set SqlName = ..GetClassSqlName(..ClassDef.Name)
 	
 	$$$Write("&sql(INSERT INTO "_SqlName)
 	$$$Write("  ("_Names_")")
 	$$$Write("  VALUES")
 	$$$Write("  ("_Values_"))")
-	$$$Write("Set RowId = %ROWID") 
 	$$$Write("If SQLCODE Quit $$$ERROR($$$SQLError,SQLCODE,$g(%msg))")
+	$$$Write("Set RowId = %ROWID") 
 	$$$Write("Quit $$$OK")
 	
 	set sc = md.%Save()
@@ -247,94 +271,6 @@ Method GenerateInitDataMethod(Nodes As %ListOfObjects) As %Status
 
 // =====
 
-/// Generate default Ensemble components for new machine configuration
-Method GenerateEnsemble() As %Status
-{
-	set Type = ..Config.Configuration.ConfigType
-	if Type '= "transforming" return $$$OK
-	
-	; Names of data classes
-	set TransformingDataClassName = ..GetClassName(..Config)
-	set StagingDataClassName = $Replace(TransformingDataClassName, ".transforming.", ".staging.")
-	
-	
-	; == Generate empty business process
-	
-	set BPName = "opc.ua.bp."_..Config.Equipment.Name_"Transform"
-	if '##class(%Dictionary.ClassDefinition).%ExistsId(BPName) {
-		set ClassDef = ##class(%Dictionary.ClassDefinition).%New(BPName, 25)
-		set ClassDef.Super = "Ens.BusinessProcessBPL"
-		
-		; Insert default BPL XData block
-		set BPL = ##class(%Dictionary.XDataDefinition).%OpenId(..%ClassName(1)_"||BPLTransform")
-		set BPL = BPL.%ConstructClone()
-		set BPL.Name = "BPL"
-		do ClassDef.XDatas.Insert(BPL)
-		
-		; Replace dataclass name template
-		set Data = BPL.Data.Read()
-		set Data = $Replace(Data, "{TransformingRecord}", TransformingDataClassName)
-		set Data = $Replace(Data, "{StagingRecord}", StagingDataClassName)
-		set Data = $Replace(Data, "{TransformingDTL}", $Replace(BPName, ".bp.", ".dtl."))
-		do BPL.Data.Clear(), BPL.Data.Write(Data)
-		
-		; The BP doesn't need compilation, because it doesn't do anything yet
-		set sc = ClassDef.%Save()
-		if 'sc Quit sc
-	}
-	
-	; == Generate empty business rule
-	
-	set RuleName = "opc.ua.rule."_..Config.Equipment.Name_"Rule"
-	if '##class(%Dictionary.ClassDefinition).%ExistsId(RuleName) {
-		set ClassDef = ##class(%Dictionary.ClassDefinition).%New(RuleName, 25)
-		set ClassDef.Super = "Ens.BusinessProcessBPL"
-		
-		; Insert default rule definition XData block
-		set RuleDef = ##class(%Dictionary.XDataDefinition).%OpenId(..%ClassName(1)_"||EmptyRuleDefinition")
-		set RuleDef = RuleDef.%ConstructClone()
-		set RuleDef.Name = "RuleDefinition"
-		do ClassDef.XDatas.Insert(RuleDef)
-		
-		; Add context class to rule
-		set Data = RuleDef.Data.Read()
-		set Data = $Replace(Data, "context=""""", "context="""_BPName_".Context""")
-		do RuleDef.Data.Clear(), RuleDef.Data.Write(Data)
-		
-		; The rule doesn't need compilation, because it doesn't do anything yet
-		set sc = ClassDef.%Save()
-		if 'sc Quit sc
-	}
-	
-	; == Generate empty DTL
-	
-	set DTLName = "opc.ua.dtl."_..Config.Equipment.Name_"Transformxxx"
-	if '##class(%Dictionary.ClassDefinition).%ExistsId(DTLName) {
-		set ClassDef = ##class(%Dictionary.ClassDefinition).%New(DTLName, 25)
-		set ClassDef.Super = "Ens.DataTransformDTL"
-		set ClassDef.DependsOn = TransformingDataClassName_","_StagingDataClassName
-		
-		; Insert default rule definition XData block
-		set RuleDef = ##class(%Dictionary.XDataDefinition).%OpenId(..%ClassName(1)_"||EmptyDTL")
-		set RuleDef = RuleDef.%ConstructClone()
-		set RuleDef.Name = "DTL"
-		do ClassDef.XDatas.Insert(RuleDef)
-		
-		; Add context class to rule
-		set Data = RuleDef.Data.Read()
-		set Data = $Replace(Data, "{TransformingRecord}", TransformingDataClassName)
-		set Data = $Replace(Data, "{StagingRecord}", StagingDataClassName)
-		do RuleDef.Data.Clear(), RuleDef.Data.Write(Data)
-		
-		; The DTL doesn't need compilation, because it doesn't do anything yet
-		set sc = ClassDef.%Save()
-		if 'sc Quit sc
-	}
-	
-	
-	Quit $$$OK
-}
-
 /// Returns the SQL name for a class. Does not yes account for
 /// explicitly specified SQL names.
 ClassMethod GetClassSqlName(ClassName As %String) As %String
@@ -368,47 +304,7 @@ ClassMethod GetElement(Collection As %Collection.ListOfObj, Name As %String) As 
 /// Returns the IRIS type for the input (node) datatype
 ClassMethod GetIRISType(DataType As %String) As %String [ CodeMode = expression ]
 {
-$Case(DataType,"timestamp":"%TimeStamp","time":"%Time","boolean":"%Boolean","integer":"%Integer","double":"%Double","float":"%Double","string":"%String","decimal":"%Decimal",:"%RawString")
-}
-
-// =====
-
-/// Template data for the automatic generation of the business process
-XData BPLTransform [ XMLNamespace = "http://www.intersystems.com/bpl" ]
-{
-<process language='objectscript' request='opc.ua.rest.impl.Request' response='Ens.Response' >
-<context>
-<property name='Readings' type='{StagingRecord}' instantiate='0' />
-<property name='TransformingRecord' type='{TransformingRecord}' instantiate='1' />
-</context>
-<sequence  >
-<scope >
-<assign name="Readings to context" property="context.Readings" value="request.Readings" action="set"  />
-<transform name='Transform' class='{TransformingDTL}' source='context.Readings' target='context.TransformingRecord' />
-<faulthandlers>
-<catchall >
-<alert value='"Error ["_$System.Status.GetErrorText(context.%LastError)_"] / ["_$ZERROR_"]"' />
-</catchall>
-</faulthandlers>
-</scope>
-</sequence>
-</process>
-}
-
-/// Template data for the automatic generation of business rules
-XData EmptyRuleDefinition [ XMLNamespace = "http://www.intersystems.com/rule" ]
-{
-<ruleDefinition alias="" context="" production="">
-<ruleSet name="" effectiveBegin="" effectiveEnd="">
-</ruleSet>
-</ruleDefinition>
-}
-
-/// Template data for the automatic generation of DTL
-XData EmptyDTL [ XMLNamespace = "http://www.intersystems.com/dtl" ]
-{
-<transform sourceClass='{StagingRecord}' targetClass='{TransformingRecord}' create='existing' language='objectscript' >
-</transform>
+$Case(DataType,"date":"%Date","timestamp":"%TimeStamp","time":"%Time","boolean":"%Boolean","integer":"%Integer","double":"%Double","float":"%Double","string":"%String","decimal":"%Decimal",:"%RawString")
 }
 
 }

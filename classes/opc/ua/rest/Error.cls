@@ -11,7 +11,6 @@ Property Message As %String(MAXLEN = 2048);
 /// Generate an error message easily in JSON
 ClassMethod GenerateErrorInJSON(pCode As %Integer, pMessage As %String) As %String
 {
-	
 	#dim tError As opc.ua.rest.Error
 	set tError = ##class(opc.ua.rest.Error).%New()
 	set tError.Code = pCode

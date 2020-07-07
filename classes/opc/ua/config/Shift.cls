@@ -1,36 +1,57 @@
 /// Shift configuration table
-Class opc.ua.config.Shift Extends %Persistent
+Class opc.ua.config.Shift Extends (%Persistent, %JSON.Adaptor)
 {
 
 /// Name of the shift
-Property Name As %String(MAXLEN = 100) [ Required ];
+Property Name As %String(%JSONFIELDNAME = "name", MAXLEN = 100) [ Required ];
 
 /// Description 
-Property Description As %String(MAXLEN = 1000);
+Property Description As %String(%JSONFIELDNAME = "description", MAXLEN = 1000);
 
 /// Shift valid from
-Property ValidFrom As %Date [ InitialExpression = {$NOW(0)}, Required ];
+Property ValidFrom As %Date(%JSONFIELDNAME = "valid_from") [ InitialExpression = {$NOW(0)}, Required ];
 
 /// Shift valid to
-Property ValidTo As %Date;
+Property ValidTo As %Date(%JSONFIELDNAME = "valid_to");
 
 /// Start day of week of the shift
-Property StartDayOfWeek As %Integer(DISPLAYLIST = ",Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday", VALUELIST = ",1,2,3,4,5,6,7");
+Property StartDayOfWeek As %Integer(%JSONFIELDNAME = "start_day_of_week", DISPLAYLIST = ",Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday", VALUELIST = ",1,2,3,4,5,6,7");
 
 /// Start time of the shift
-Property StartTime As %Time;
+Property StartTime As %Time(%JSONFIELDNAME = "start_time");
 
 /// End day of week of the shift 
-Property EndDayOfWeek As %Integer(DISPLAYLIST = ",Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday", VALUELIST = ",1,2,3,4,5,6,7");
+Property EndDayOfWeek As %Integer(%JSONFIELDNAME = "end_day_of_week", DISPLAYLIST = ",Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday", VALUELIST = ",1,2,3,4,5,6,7");
 
 /// End time of the shift 
-Property EndTime As %Time;
+Property EndTime As %Time(%JSONFIELDNAME = "end_time");
 
 /// Shift number
-Property ShiftNumber As %Integer;
+Property ShiftNumber As %Integer(%JSONFIELDNAME = "shift_number");
 
 /// Shift is still in use as a valid defintion
-Property Active As %Boolean [ InitialExpression = 1 ];
+Property Active As %Boolean(%JSONFIELDNAME = "active") [ InitialExpression = 1 ];
+
+ClassMethod GetShiftList() As %ListOfObjects
+{
+	set tShiftList = ##class(%ListOfObjects).%New()
+	
+	&sql(DECLARE C1 CURSOR FOR
+        SELECT ID INTO :shiftId FROM opc_ua_config.Shift)
+    &sql(OPEN C1)
+    If SQLCODE '= 0 Quit tShiftList
+    &sql(FETCH C1)
+    while (SQLCODE = 0) {
+    	set tShift = ##class(opc.ua.config.Shift).%OpenId(shiftId,,.sc)
+    	if ('$$$ISERR(sc)) {
+    		Do tShiftList.Insert(tShift)    		
+    	}	
+    	&sql(FETCH C1)
+    }
+    &sql(CLOSE C1)
+    
+    return tShiftList
+}
 
 Storage Default
 {

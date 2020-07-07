@@ -36,6 +36,17 @@ ClassMethod Get(EquipmentName As %String, ConfigType As %String, ConfigName As %
 	return EquipmentConfig
 }
 
+/// Returns all equipment configurations (i.e., staging, transforming,
+/// serving) for a given combination of equipment and configuration names.
+Query ByEquipmentCfg(EquipmentName As %String, ConfigName As %String) As %SQLQuery(CONTAINID = 1) [ SqlProc ]
+{
+SELECT %ID
+  FROM EquipmentConfiguration
+ WHERE Equipment->Name = :EquipmentName
+   AND Configuration->Name = :ConfigName
+   AND Configuration->IsCurrentVersion = 1
+}
+
 // =====
 
 Storage Default
