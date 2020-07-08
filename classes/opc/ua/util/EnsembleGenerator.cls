@@ -4,6 +4,8 @@ Class opc.ua.util.EnsembleGenerator Extends %RegisteredObject
 /// The equipment to generate the Ensemble components for
 Property Equipment As opc.ua.config.Equipment;
 
+// ===== Scratch data
+
 /// The staging configuration (should be only one)
 Property StagingConfig As opc.ua.config.EquipmentConfiguration;
 
@@ -13,11 +15,16 @@ Property TransformingConfigs As list Of opc.ua.config.EquipmentConfiguration;
 /// One or more serving configurations
 Property ServingConfigs As list Of opc.ua.config.EquipmentConfiguration;
 
+/// The package for Ensemble message classes
+Property MessagePackage As %String;
+
 /// The production to create/update
 Property Production As Ens.Config.Production;
 
 // =====
 
+/// Entry point. Generates Ensemble components for a given equipment object.
+/// Equipment may be passed by id as well.
 ClassMethod Generate(Equipment As opc.ua.config.Equipment) As %Status
 {
 	set Me = ..%New()
@@ -35,13 +42,13 @@ ClassMethod Generate(Equipment As opc.ua.config.Equipment) As %Status
 	return Me.GenerateImpl()
 }
 
-/// Generate default Ensemble components for equipment
+/// Implementation: generate default Ensemble components for equipment.
 Method GenerateImpl() As %Status
 {
-	; Get/create a production configuration object
+	; Get/create an Ensemble production configuration object
 	set sc = ..GetProductionConfig(.Production)
-	If 'sc Quit sc
-	Set ..Production = Production
+	if 'sc return sc
+	set ..Production = Production
 	
 	; Loop through the configurations for this equipment
 	set key = ""
@@ -53,6 +60,7 @@ Method GenerateImpl() As %Status
 		
 		#dim Config As opc.ua.config.Configuration
 		if Config.ConfigType = "staging" {
+			; We expect/support only one staging configuration per equipment
 			set ..StagingConfig = EquipConfig
 		} elseif Config.ConfigType = "transforming" {
 			do ..TransformingConfigs.Insert(EquipConfig)
@@ -62,8 +70,8 @@ Method GenerateImpl() As %Status
 	}
 	
 	; Create serving request class
-	set MsgPkg = "opc.client.msg"
-	set sc = ..CreateServingReq(MsgPkg)
+	set ..MessagePackage = "opc.client.msg"
+	set sc = ..CreateServingReq()
 	if 'sc return sc
 	
 	; Generate all transforming BPs
@@ -85,10 +93,11 @@ Method GenerateImpl() As %Status
 	quit $$$OK
 }
 
+/// Generates classes for a transforming stage.
 Method GenerateTransforming(EquipConfig As opc.ua.config.EquipmentConfiguration) As %Status
 {
 	#dim Config As opc.ua.config.Configuration
-	Set Config = EquipConfig.Configuration
+	set Config = EquipConfig.Configuration
 	
 	; Packages to use for various classes
 	set BasePkg = ..Equipment.ClassPackage
@@ -96,10 +105,9 @@ Method GenerateTransforming(EquipConfig As opc.ua.config.EquipmentConfiguration)
 	set RulePkg = BasePkg_".rule"
 	set TransformPkg = BasePkg_".dtl"
 	
-	set MsgPkg = "opc.client.msg"
-	set ServingReqClass = MsgPkg_"."_..Equipment.Name_"ServingRequest"
+	set ServingReqClass = ..MessagePackage_"."_..Equipment.Name_"ServingRequest"
 	
-	; Names of data classe we receive and create
+	; Names of data classes the BP receives and creates
 	set DataClassIn = ##class(opc.ua.data.Generator).GetClassName(..StagingConfig)
 	set DataClassOut = ##class(opc.ua.data.Generator).GetClassName(EquipConfig)
 	
@@ -122,10 +130,15 @@ Method GenerateTransforming(EquipConfig As opc.ua.config.EquipmentConfiguration)
 	set sc = ..CreateBP(ProcessClass, "TransformProcess", ProcessName, .Replacements)
 	if 'sc quit ..BuildStatus("Error creating BP {}", sc, ProcessClass)
 	
-	set sc = ..CreateRule(RuleClass, "Rule", ProcessClass)
+	; Replacement strings for business rule
+	kill Replacements
+	set Replacements("{RuleContext}") = ProcessClass_".Context"
+	set Replacements("{ProductionName}") = ""
+	set sc = ..CreateRule(RuleClass, "Rule", .Replacements)
 	if 'sc quit ..BuildStatus("Error creating rule {}", sc, RuleClass)
 	
 	; Replacement strings for DTL XData
+	kill Replacements
 	set Replacements("{InputClass}") = "opc.ua.msg.TransformingReq"
 	set Replacements("{OutputClass}") = DataClassOut
 	set Replacements("{InputRef}") = ".StagingData"
@@ -133,22 +146,23 @@ Method GenerateTransforming(EquipConfig As opc.ua.config.EquipmentConfiguration)
 	set sc = ..CreateDTL(TransformClass, "Transform", .Replacements)
 	if 'sc quit ..BuildStatus("Error creating DTL {}", sc, TransformClass)
 	
-	Quit $$$OK
+	return $$$OK
 }
 
+/// Generates classes for a serving stage.
 Method GenerateServing(EquipConfig As opc.ua.config.EquipmentConfiguration) As %Status
 {
 	#dim Config As opc.ua.config.Configuration
-	Set Config = EquipConfig.Configuration
+	set Config = EquipConfig.Configuration
 	
-	Set BasePkg = ..Equipment.ClassPackage
+	set BasePkg = ..Equipment.ClassPackage
 	set ProcessPkg = BasePkg_".bp"
 	set RulePkg = BasePkg_".rule"
 	set TransformPkg = BasePkg_".dtl"
 	
-	set MsgPkg = "opc.client.msg"
-	set ServingReqClass = MsgPkg_"."_..Equipment.Name_"ServingRequest"
+	set ServingReqClass = ..MessagePackage_"."_..Equipment.Name_"ServingRequest"
 	
+	; Name of data class the BP creates
 	set DataClassOut = ##class(opc.ua.data.Generator).GetClassName(EquipConfig)
 	
 	; Name of business process, rule, DTL
@@ -167,7 +181,11 @@ Method GenerateServing(EquipConfig As opc.ua.config.EquipmentConfiguration) As %
 	set sc = ..CreateBP(ProcessClass, "ServingProcess", ProcessName, .Replacements)
 	if 'sc quit ..BuildStatus("Error creating BP {}", sc, ProcessClass)
 	
-	set sc = ..CreateRule(RuleClass, "Rule", ProcessClass)
+	; Replacement strings for business rule
+	kill Replacements
+	set Replacements("{RuleContext}") = ProcessClass_".Context"
+	set Replacements("{ProductionName}") = ""
+	set sc = ..CreateRule(RuleClass, "Rule", .Replacements)
 	if 'sc quit ..BuildStatus("Error creating rule {}", sc, RuleClass)
 	
 	; Replacement strings for DTL XData
@@ -178,13 +196,14 @@ Method GenerateServing(EquipConfig As opc.ua.config.EquipmentConfiguration) As %
 	set sc = ..CreateDTL(TransformClass, "Transform", .Replacements)
 	if 'sc quit ..BuildStatus("Error creating DTL {}", sc, TransformClass)
 	
-	Quit $$$OK
+	return $$$OK
 }
 
+/// Creates a Business Process and adds it to the production
 Method CreateBP(ClassName As %String, TplName As %String, ProdItemName As %String, ByRef Replacements As %String) As %Status
 {
 	; Don't do anything if the class already exists
-	if ##class(%Dictionary.ClassDefinition).%ExistsId(ClassName) Quit $$$OK
+	if ##class(%Dictionary.ClassDefinition).%ExistsId(ClassName) return $$$OK
 	
 	set ClassDef = ##class(%Dictionary.ClassDefinition).%New(ClassName, 25)
 	set ClassDef.Super = "Ens.BusinessProcessBPL"
@@ -207,16 +226,17 @@ Method CreateBP(ClassName As %String, TplName As %String, ProdItemName As %Strin
 	
 	; Save the new class
 	set sc = ClassDef.%Save()
-	if 'sc Quit sc
+	if 'sc return sc
 	
 	; Add to production
-	Set sc = ..AddProductionItem(ProdItemName, ClassName)
+	set sc = ..AddProductionItem(ProdItemName, ClassName)
 	if 'sc quit ..BuildStatus("Error adding item {} to production:", sc, ClassName)
 	
 	return $$$OK
 }
 
-Method CreateRule(ClassName As %String, TplName As %String, ProcessClass As %String) As %Status
+/// Creates a Business Rule
+Method CreateRule(ClassName As %String, TplName As %String, ByRef Replacements As %String) As %Status
 {
 	; Don't do anything if the class already exists
 	if ##class(%Dictionary.ClassDefinition).%ExistsId(ClassName) quit $$$OK
@@ -230,34 +250,7 @@ Method CreateRule(ClassName As %String, TplName As %String, ProcessClass As %Str
 	set RuleDef.Name = "RuleDefinition"
 	do ClassDef.XDatas.Insert(RuleDef)
 	
-	; Add context class to rule
-	set Data = RuleDef.Data.Read()
-	set Data = $Replace(Data, "context=""""", "context="""_ProcessClass_".Context""")
-	do RuleDef.Data.Clear(), RuleDef.Data.Write(Data)
-	
-	; Save
-	set sc = ClassDef.%Save()
-	if 'sc Quit sc
-	
-	return $$$OK
-}
-
-Method CreateDTL(ClassName As %String, TplName As %String, ByRef Replacements As %String) As %Status
-{
-	; Don't do anything if the class already exists
-	if ##class(%Dictionary.ClassDefinition).%ExistsId(ClassName) quit $$$OK
-	
-	set ClassDef = ##class(%Dictionary.ClassDefinition).%New(ClassName, 25)
-	set ClassDef.Super = "Ens.DataTransformDTL"
-	set ClassDef.DependsOn = Replacements("{InputClass}")_","_Replacements("{OutputClass}")
-	
-	; Insert default rule definition XData block
-	set RuleDef = ##class(%Dictionary.XDataDefinition).%OpenId(..%ClassName(1)_"||"_TplName)
-	set RuleDef = RuleDef.%ConstructClone()
-	set RuleDef.Name = "DTL"
-	do ClassDef.XDatas.Insert(RuleDef)
-	
-	; Add context class to rule
+	; Handle replacements
 	set Data = RuleDef.Data.Read()
 	set Key = ""
 	for  {
@@ -269,14 +262,50 @@ Method CreateDTL(ClassName As %String, TplName As %String, ByRef Replacements As
 	
 	; Save
 	set sc = ClassDef.%Save()
-	if 'sc Quit sc
+	if 'sc return sc
 	
 	return $$$OK
 }
 
-Method CreateServingReq(MsgPkg As %String, Output ServingReqClass As %String) As %Status
+/// Creates a Data Transformation
+Method CreateDTL(ClassName As %String, TplName As %String, ByRef Replacements As %String) As %Status
 {
-	set ServingReqClass = MsgPkg_"."_..Equipment.Name_"ServingRequest"
+	; Don't do anything if the class already exists
+	if ##class(%Dictionary.ClassDefinition).%ExistsId(ClassName) quit $$$OK
+	
+	set ClassDef = ##class(%Dictionary.ClassDefinition).%New(ClassName, 25)
+	set ClassDef.Super = "Ens.DataTransformDTL"
+	set ClassDef.DependsOn = Replacements("{InputClass}")_","_Replacements("{OutputClass}")
+	
+	; Insert default transformation XData block
+	set RuleDef = ##class(%Dictionary.XDataDefinition).%OpenId(..%ClassName(1)_"||"_TplName)
+	set RuleDef = RuleDef.%ConstructClone()
+	set RuleDef.Name = "DTL"
+	do ClassDef.XDatas.Insert(RuleDef)
+	
+	; Handle replacements
+	set Data = RuleDef.Data.Read()
+	set Key = ""
+	for  {
+		set Key = $Order(Replacements(Key), 1, Value)
+		if Key = "" quit
+		set Data = $Replace(Data, Key, Value)
+	}
+	do RuleDef.Data.Clear(), RuleDef.Data.Write(Data)
+	
+	; Save
+	set sc = ClassDef.%Save()
+	if 'sc return sc
+	
+	return $$$OK
+}
+
+/// Creates the request class for all Serving business processes for
+/// the equipment. Will contain a property for each of the transforming
+/// data classes.
+Method CreateServingReq(Output ServingReqClass As %String) As %Status
+{
+	set ServingReqClass = ..MessagePackage_"."_..Equipment.Name_"ServingRequest"
 	
 	; Don't do anything if the class already exists
 	if ##class(%Dictionary.ClassDefinition).%ExistsId(ServingReqClass) quit $$$OK
@@ -289,254 +318,78 @@ Method CreateServingReq(MsgPkg As %String, Output ServingReqClass As %String) As
 	#dim PropDef As %Dictionary.PropertyDefinition
 	set PropDef = ..GetElement(ClassDef.Properties, "StagingData")
 	set PropDef.Type = StagingDataClass
-	Set PropDef.SequenceNumber = $Increment(SequenceNumber)
+	set PropDef.SequenceNumber = $Increment(SequenceNumber)
 	
 	; Add properties for all transforming configurations
 	for i = 1:1:..TransformingConfigs.Count() {
 		#dim EquipConfig As opc.ua.config.EquipmentConfiguration
-		Set EquipConfig = ..TransformingConfigs.GetAt(i)
-		Set DataClass = ##class(opc.ua.data.Generator).GetClassName(EquipConfig)
-		Set PropName = EquipConfig.Configuration.Name
+		set EquipConfig = ..TransformingConfigs.GetAt(i)
+		set DataClass = ##class(opc.ua.data.Generator).GetClassName(EquipConfig)
+		set PropName = EquipConfig.Configuration.Name
 		set PropDef = ..GetElement(ClassDef.Properties, PropName)
 		set PropDef.Type = DataClass
-		Set PropDef.SequenceNumber = $Increment(SequenceNumber)
+		set PropDef.SequenceNumber = $Increment(SequenceNumber)
 	}
 	
 	; Save
 	set sc = ClassDef.%Save()
-	if 'sc Quit sc
+	if 'sc return sc
 	
 	return $$$OK
 }
 
+/// Adds various components to the production, if not already present
 Method UpdateProduction() As %Status
 {
-	; Add routers, if not yet present
+	; Create the two routing rules, if they don't exist
 	
-	Set Name = "TransformRouter"
-	Set sc = ..AddProductionItem(Name, "EnsLib.MsgRouter.RoutingEngine")
-	If 'sc Quit ..BuildStatus("Error adding {} to production:", sc, Name)
+	set Replacements("{RuleContext}") = "EnsLib.MsgRouter.RoutingEngine"
+	set Replacements("{ProductionName}") = ..Production.%ClassName(1)
 	
-	Set Name = "ServingRouter"
-	Set sc = ..AddProductionItem(Name, "EnsLib.MsgRouter.RoutingEngine")
-	If 'sc Quit ..BuildStatus("Error adding {} to production:", sc, Name)
+	set TransformRuleClass = "opc.client.rule.TransformRule"
+	set sc = ..CreateRule(TransformRuleClass, "Rule", .Replacements)
+	if 'sc quit ..BuildStatus("Error creating rule {}", sc, TransformRuleClass)
 	
-	
-	; Add services for equipment, if not yet present
-	
-	Set EquipmentName = ..Equipment.Name
-	
-	Set Name = EquipmentName_"Data"
-	Set Settings($i(Settings)) = $lb("Host", "TargetConfigNames", "TransformRouter")
-	Set sc = ..AddProductionItem(Name, "opc.ua.service.DataService", .Settings)
-	If 'sc Quit ..BuildStatus("Error adding {} to production:", sc, Name)
-	
-	Set Name = EquipmentName_"ReplayService"
-	Set Settings($i(Settings)) = $lb("Host", "TargetConfigNames", "TransformRouter")
-	Set sc = ..AddProductionItem(Name, "opc.ua.service.ReplayDataService", .Settings)
-	If 'sc Quit ..BuildStatus("Error adding {} to production:", sc, Name)
-	
-	Set Name = EquipmentName_"Subscription"
-	Set Settings($i(Settings)) = $lb("Host", "TargetConfigNames", "TransformRouter")
-	Set sc = ..AddProductionItem(Name, "opc.ua.service.SubscriptionService", .Settings)
-	If 'sc Quit ..BuildStatus("Error adding {} to production:", sc, Name)
-	
-	Set sc = ..Production.SaveToClass()
-	If 'sc Quit ..BuildStatus("Error saving configuration for production {}:", sc, ..Production.Name)
-	
-	Quit $$$OK
-}
-
-/*
-/// Entry point: generates the Ensemble components for the
-/// given equipment configuration.
-ClassMethod GenerateOld(EquipmentConfiguration As opc.ua.config.EquipmentConfiguration) As %Status
-{
-	set Me = ..%New()
-	
-	if $IsObject(EquipmentConfiguration) {
-		set Me.Config = EquipmentConfiguration
-		
-	} else {
-		; Support passing by id
-		do Me.ConfigSetObjectId(EquipmentConfiguration)
-		
-	}
-	
-	; Actual implementation in method
-	return Me.GenerateImpl()
-}
-
-/// Generate default Ensemble components for new machine configuration
-Method GenerateImplOld() As %Status
-{
-	/*
-	; We only need components for transforming and serving
-	set ..Type = ..Config.Configuration.ConfigType
-	if ..Type = "staging" return $$$OK
-	
-	set EquipmentName = ..Config.Equipment.Name
-	set ConfigName = ..Config.Configuration.Name
-	
-	; Get/create a production configuration object
-	set sc = ..GetProductionConfig(.Production)
-	If 'sc Quit sc
-	Set ..Production = Production
-	
-	; ===
-	
-	Set BasePkg = "gj."_..Config.Equipment.ClassPackage
-	set ProcessPkg = BasePkg_".bp"
-	set RulePkg = BasePkg_".rule"
-	set TransformPkg = BasePkg_".dtl"
-	
-	set Stage = $Select(..Type = "transforming": "Transform", 1: "Serving")
-	
-	; Determine names of various components to generate
-	
-	set ProcessName = ProcessPkg_"."_EquipmentName_Stage
-	if ..Type = "transforming" {
-		set RequestClass = "opc.ua.msg.TransformingReq"
-	} else {
-		set RequestClass = "opc.ua.msg.ServingReq"
-	}
-	set ResponseClass = ProcessPkg_"."_EquipmentName_Stage_"."_EquipmentName_Stage_"Resp"
-	set RuleName = RulePkg_"."_EquipmentName_Stage
-	set TransformName = TransformPkg_"."_EquipmentName_Stage
-	
-	set DataClassIn = ..DetermineInputDataClass()
-	set DataClassOut = ##class(opc.ua.data.Generator).GetClassName(..Config)
-	
-	; == Generate empty business process
-	
-	if '##class(%Dictionary.ClassDefinition).%ExistsId(ProcessName) {
-		set ClassDef = ##class(%Dictionary.ClassDefinition).%New(ProcessName, 25)
-		set ClassDef.Super = "Ens.BusinessProcessBPL"
-		
-		; Insert default BPL XData block
-		set BPL = ##class(%Dictionary.XDataDefinition).%OpenId(..%ClassName(1)_"||"_Stage_"Process")
-		set BPL = BPL.%ConstructClone()
-		set BPL.Name = "BPL"
-		do ClassDef.XDatas.Insert(BPL)
-		
-		; Replace dataclass name template
-		set Data = BPL.Data.Read()
-		set Data = $Replace(Data, "{RequestClass}", RequestClass)
-		set Data = $Replace(Data, "{ResponseClass}", ResponseClass)
-		set Data = $Replace(Data, "{DataClassIn}", DataClassIn)
-		set Data = $Replace(Data, "{DataClassOut}", DataClassOut)
-		set Data = $Replace(Data, "{RuleClass}", RuleName)
-		set Data = $Replace(Data, "{TransformName}", TransformName)
-		do BPL.Data.Clear(), BPL.Data.Write(Data)
-		
-		; The BP doesn't need compilation, because it doesn't do anything yet
-		set sc = ClassDef.%Save()
-		if 'sc Quit sc
-		
-		; Add to production
-		Set sc = ..AddProductionItem(ConfigName, ProcessName)
-		if 'sc quit ..BuildStatus("Error adding item {} to production:", sc, ProcessName)
-	}
-	
-	; Response class
-	if '##class(%Dictionary.ClassDefinition).%ExistsId(ResponseClass) {
-		set ClassDef = ##class(%Dictionary.ClassDefinition).%New(ResponseClass, 25)
-		set ClassDef.Super = "Ens.Response"
-		
-		set sc = ClassDef.%Save()
-		if 'sc Quit sc
-		set sc = $System.OBJ.Compile(RequestClass, "k-d")
-		if 'sc Quit sc
-	}
-	
-	; == Generate empty business rule
-	
-	if '##class(%Dictionary.ClassDefinition).%ExistsId(RuleName) {
-		set ClassDef = ##class(%Dictionary.ClassDefinition).%New(RuleName, 25)
-		set ClassDef.Super = "Ens.Rule.Definition"
-		
-		; Insert default rule definition XData block
-		set RuleDef = ##class(%Dictionary.XDataDefinition).%OpenId(..%ClassName(1)_"||Rule")
-		set RuleDef = RuleDef.%ConstructClone()
-		set RuleDef.Name = "RuleDefinition"
-		do ClassDef.XDatas.Insert(RuleDef)
-		
-		; Add context class to rule
-		set Data = RuleDef.Data.Read()
-		set Data = $Replace(Data, "context=""""", "context="""_ProcessName_".Context""")
-		do RuleDef.Data.Clear(), RuleDef.Data.Write(Data)
-		
-		; The rule doesn't need compilation, because it doesn't do anything yet
-		set sc = ClassDef.%Save()
-		if 'sc Quit sc
-	}
-	
-	; == Generate empty DTL
-	
-	if '##class(%Dictionary.ClassDefinition).%ExistsId(TransformName) {
-		set ClassDef = ##class(%Dictionary.ClassDefinition).%New(TransformName, 25)
-		set ClassDef.Super = "Ens.DataTransformDTL"
-		set ClassDef.DependsOn = DataClassIn_","_DataClassOut
-		
-		; Insert default rule definition XData block
-		set RuleDef = ##class(%Dictionary.XDataDefinition).%OpenId(..%ClassName(1)_"||Transform")
-		set RuleDef = RuleDef.%ConstructClone()
-		set RuleDef.Name = "DTL"
-		do ClassDef.XDatas.Insert(RuleDef)
-		
-		; Add context class to rule
-		set Data = RuleDef.Data.Read()
-		set Data = $Replace(Data, "{DataClassIn}", DataClassIn)
-		set Data = $Replace(Data, "{DataClassOut}", DataClassOut)
-		do RuleDef.Data.Clear(), RuleDef.Data.Write(Data)
-		
-		; The DTL doesn't need compilation, because it doesn't do anything yet
-		set sc = ClassDef.%Save()
-		if 'sc Quit sc
-	}
-	
-	; === Production
+	set ServingRuleClass = "opc.client.rule.ServingRule"
+	set sc = ..CreateRule(ServingRuleClass, "Rule", .Replacements)
+	if 'sc quit ..BuildStatus("Error creating rule {}", sc, ServingRuleClass)
 	
 	; Add routers, if not yet present
 	
-	Set Name = "TransformRouter"
-	Set sc = ..AddProductionItem(Name, "EnsLib.MsgRouter.RoutingEngine")
-	If 'sc Quit ..BuildStatus("Error adding {} to production:", sc, Name)
+	set Name = "TransformRouter"
+	set Settings($i(Settings)) = $lb("Host", "BusinessRuleName", TransformRuleClass)
+	set sc = ..AddProductionItem(Name, "EnsLib.MsgRouter.RoutingEngine", .Settings)
+	if 'sc return ..BuildStatus("Error adding {} to production:", sc, Name)
 	
-	Set Name = "ServingRouter"
-	Set sc = ..AddProductionItem(Name, "EnsLib.MsgRouter.RoutingEngine")
-	If 'sc Quit ..BuildStatus("Error adding {} to production:", sc, Name)
-	
+	set Name = "ServingRouter"
+	set Settings($i(Settings)) = $lb("Host", "BusinessRuleName", ServingRuleClass)
+	set sc = ..AddProductionItem(Name, "EnsLib.MsgRouter.RoutingEngine", .Settings)
+	if 'sc return ..BuildStatus("Error adding {} to production:", sc, Name)
 	
 	; Add services for equipment, if not yet present
 	
-	Set Name = EquipmentName_"Data"
-	Set Settings($i(Settings)) = $lb("Host", "TargetConfigNames", "TransformRouter")
-	Set sc = ..AddProductionItem(Name, "opc.ua.service.DataService", .Settings)
-	If 'sc Quit ..BuildStatus("Error adding {} to production:", sc, Name)
+	set EquipmentName = ..Equipment.Name
 	
-	Set Name = EquipmentName_"ReplayService"
-	Set Settings($i(Settings)) = $lb("Host", "TargetConfigNames", "TransformRouter")
-	Set sc = ..AddProductionItem(Name, "opc.ua.service.ReplayDataService", .Settings)
-	If 'sc Quit ..BuildStatus("Error adding {} to production:", sc, Name)
+	set Name = EquipmentName_"Data"
+	set Settings($i(Settings)) = $lb("Host", "TargetConfigNames", "TransformRouter")
+	set sc = ..AddProductionItem(Name, "opc.ua.service.DataService", .Settings)
+	if 'sc return ..BuildStatus("Error adding {} to production:", sc, Name)
 	
-	Set Name = EquipmentName_"Subscription"
-	Set Settings($i(Settings)) = $lb("Host", "TargetConfigNames", "TransformRouter")
-	Set sc = ..AddProductionItem(Name, "opc.ua.service.SubscriptionService", .Settings)
-	If 'sc Quit ..BuildStatus("Error adding {} to production:", sc, Name)
+	set Name = EquipmentName_"ReplayService"
+	set Settings($i(Settings)) = $lb("Host", "TargetConfigNames", "TransformRouter")
+	set sc = ..AddProductionItem(Name, "opc.ua.service.ReplayDataService", .Settings)
+	if 'sc return ..BuildStatus("Error adding {} to production:", sc, Name)
 	
+	set Name = EquipmentName_"Subscription"
+	set Settings($i(Settings)) = $lb("Host", "TargetConfigNames", "TransformRouter")
+	set sc = ..AddProductionItem(Name, "opc.ua.service.SubscriptionService", .Settings)
+	if 'sc return ..BuildStatus("Error adding {} to production:", sc, Name)
 	
+	set sc = ..Production.SaveToClass()
+	if 'sc return ..BuildStatus("Error saving configuration for production {}:", sc, ..Production.Name)
 	
-	
-	
-	Set sc = ..Production.SaveToClass()
-	If 'sc Quit ..BuildStatus("Error saving configuration for production {}:", sc, ..Production.Name)
-	
-	
-	Quit $$$OK
-	
+	return $$$OK
 }
-	*/
 
 // ===== Production helpers
 
@@ -546,109 +399,81 @@ Method GenerateImplOld() As %Status
 ClassMethod GetProductionConfig(Output Production As Ens.Config.Production) As %Status
 {
 	; Did we create the production here?
-	Set IsNew = 0
+	set IsNew = 0
 	
 	; Get name of latest running production
-	Set ProdName = "" ;;##class(Ens.Director).GetActiveProductionName()
-	If ProdName = "" {
+	set ProdName = "" ;;##class(Ens.Director).GetActiveProductionName()
+	if ProdName = "" {
 		; No current or previously used production; use default name
-		Set ProdName = "opc.client.Production"
+		set ProdName = "opc.client.Production"
 		
 		; If the production class doesn't yet exist, create it
-		If '##class(%Dictionary.ClassDefinition).%ExistsId(ProdName) {
-			Set sc = ..CreateProduction(ProdName)
-			If 'sc Quit ..BuildStatus("Error creating new production {}:", sc, ProdName)
-			Set IsNew = 1
+		if '##class(%Dictionary.ClassDefinition).%ExistsId(ProdName) {
+			set sc = ..CreateProduction(ProdName)
+			if 'sc return ..BuildStatus("Error creating new production {}:", sc, ProdName)
+			set IsNew = 1
 		}
 	}
 	
 	; Create configuration item to return
-	Set sc = ##class(Ens.Config.Production).LoadFromClass(ProdName)
-	If 'sc Quit ..BuildStatus("Error loading production {} configuration:", sc, ProdName)
-	Set Production = ##class(Ens.Config.Production).%OpenId(ProdName, , .sc)
-	If 'sc Quit ..BuildStatus("Error opening production {} configuration:", sc, ProdName)
+	set sc = ##class(Ens.Config.Production).LoadFromClass(ProdName)
+	if 'sc return ..BuildStatus("Error loading production {} configuration:", sc, ProdName)
+	set Production = ##class(Ens.Config.Production).%OpenId(ProdName, , .sc)
+	if 'sc return ..BuildStatus("Error opening production {} configuration:", sc, ProdName)
 	
-	Quit $$$OK
+	return $$$OK
 }
 
 /// Creates a new production with the given name.
 ClassMethod CreateProduction(Name As %String) As %Status
 {
 	; The physical production class
-	Set Prod = ##class(%Dictionary.ClassDefinition).%New(Name, 25)
-	Set Prod.Super = "Ens.Production"
-	Set XData = ..GetElement(Prod.XDatas, "ProductionDefinition")
+	set Prod = ##class(%Dictionary.ClassDefinition).%New(Name, 25)
+	set Prod.Super = "Ens.Production"
+	set XData = ..GetElement(Prod.XDatas, "ProductionDefinition")
 	Do XData.Data.WriteLine("<Production></Production>")
-	Set sc = Prod.%Save()
-	If 'sc Quit ..BuildStatus("Error saving new production {}:", sc, Name)
+	set sc = Prod.%Save()
+	if 'sc return ..BuildStatus("Error saving new production {}:", sc, Name)
 	
 	; Production class needs to be compiled for further configuration
-	Set sc = $System.OBJ.Compile(Name, "cku-d")
-	If 'sc Quit ..BuildStatus("Error compiling new production {}:", sc, Name)
+	set sc = $System.OBJ.Compile(Name, "cku-d")
+	if 'sc return ..BuildStatus("Error compiling new production {}:", sc, Name)
 	
 	; Create configuration object with a few default settings
-	Set ProdCfg = ##class(Ens.Config.Production).%New(Name)
-	Set ProdCfg.Description = "OPC UA Production"
-	Set ProdCfg.TestingEnabled = 1
-	Set ProdCfg.ActorPoolSize = 10
+	set ProdCfg = ##class(Ens.Config.Production).%New(Name)
+	set ProdCfg.Description = "OPC UA Production"
+	set ProdCfg.TestingEnabled = 1
+	set ProdCfg.ActorPoolSize = 10
 	
 	; Save configuration
-	Set sc = ProdCfg.SaveToClass()
-	If 'sc Quit ..BuildStatus("Error saving production configuration:", sc)
+	set sc = ProdCfg.SaveToClass()
+	if 'sc return ..BuildStatus("Error saving production configuration:", sc)
 	
-	Quit $$$OK
+	return $$$OK
 }
 
 /// Adds a new item to the production, but only if it doesn't exist yet.
 Method AddProductionItem(Name As %String, ClassName As %String, ByRef Settings As %String) As %Status
 {
 	; Add the item, unless it already exists
-	Set Item = ..AddElement(..Production.Items, Name)
-	If Item = "" Quit $$$OK
+	set Item = ..AddElement(..Production.Items, Name)
+	if Item = "" return $$$OK
 	
-	Set Item.ClassName = ClassName
-	If $Get(Settings) Do Item.UpdateSettings(.Settings)
+	set Item.ClassName = ClassName
+	if $Get(Settings) Do Item.UpdateSettings(.Settings)
 	
-	If $$$comClassKeyGet("opc.ua.service.DataService", $$$cCLASSprimarysuper) [ "~Ens.BusinessProcess~" {
-		; Set the pool size of business processes to 1, which mimicks what
+	if $$$comClassKeyGet("opc.ua.service.DataService", $$$cCLASSprimarysuper) [ "~Ens.BusinessProcess~" {
+		; set the pool size of business processes to 1, which mimicks what
 		; the management portal does when adding one there.
-		If $ClassMethod(ClassName, "%IsA", "Ens.BusinessProcess") Set Item.PoolSize = 1
+		if $ClassMethod(ClassName, "%IsA", "Ens.BusinessProcess") set Item.PoolSize = 1
 	}
 	
-	Kill Settings
+	kill Settings
 	
-	Quit $$$OK
+	return $$$OK
 }
 
 // ===== Helpers
-
-/// Attempt to determine the input data class. This is the data class
-/// created at the previous stage; e.g., if we are generating serving
-/// classes, the input data is that generated for the transforming
-/// layer.
-Method DetermineInputDataClass()
-{
-	/*
-	set EquipmentName = ..Config.Equipment.Name
-	set ConfigName = ..Config.Configuration.Name
-	
-	; Attempt to find configuration for previous stage
-	set ConfigType = $Case(..Type,
-	  "transforming": "staging",
-	  "serving": "transforming",
-	  : "unknown")
-	set PrevConfig = ##class(opc.ua.config.EquipmentConfiguration).Get(EquipmentName, ConfigType, ConfigName, .sc)
-	
-	; If the configuration is not found, it may have a different name.
-	; Fall back to the default in this case.
-	if 'sc return "opc.ua.data.Base"
-	
-	; Ask generator to determine data class name
-	Set InputDataClass = ##class(opc.ua.data.Generator).GetClassName(PrevConfig)
-	
-	return InputDataClass
-	*/
-}
 
 /// Retrieves, by the Name property, an element from a collection.
 /// Creates and inserts it if it doesn't already exist.
@@ -710,7 +535,7 @@ ClassMethod BuildStatus(Message As %String, Status As %Status = "", Args... As %
 
 // ===== Templates
 
-/// Template data for the automatic generation of the business process
+/// Template data for the automatic generation of a transforming business process
 XData TransformProcess [ XMLNamespace = "http://www.intersystems.com/bpl" ]
 {
 <process language='objectscript' request='{RequestClass}' response='{ResponseClass}' >
@@ -733,6 +558,7 @@ XData TransformProcess [ XMLNamespace = "http://www.intersystems.com/bpl" ]
 </process>
 }
 
+/// Template data for the automatic generation of a serving business process
 XData ServingProcess [ XMLNamespace = "http://www.intersystems.com/bpl" ]
 {
 <process language='objectscript' request='{RequestClass}' response='{ResponseClass}' >
@@ -749,13 +575,13 @@ XData ServingProcess [ XMLNamespace = "http://www.intersystems.com/bpl" ]
 /// Template data for the automatic generation of business rules
 XData Rule [ XMLNamespace = "http://www.intersystems.com/rule" ]
 {
-<ruleDefinition alias="" context="" production="">
+<ruleDefinition alias="" context="{RuleContext}" production="{ProductionName}">
 <ruleSet name="" effectiveBegin="" effectiveEnd="">
 </ruleSet>
 </ruleDefinition>
 }
 
-/// Template data for the automatic generation of DTL
+/// Template data for the automatic generation of dtata transformations
 XData Transform [ XMLNamespace = "http://www.intersystems.com/dtl" ]
 {
 <transform sourceClass='{InputClass}' targetClass='{OutputClass}' create='existing' language='objectscript' >
