@@ -372,17 +372,17 @@ Method UpdateProduction() As %Status
 	
 	set Name = EquipmentName_"Data"
 	set Settings($i(Settings)) = $lb("Host", "TargetConfigNames", "TransformRouter")
-	set sc = ..AddProductionItem(Name, "opc.ua.service.DataService", .Settings)
+	set sc = ..AddProductionItem(Name, "opc.ua.service.DataService", .Settings, 0)
 	if 'sc return ..BuildStatus("Error adding {} to production:", sc, Name)
 	
 	set Name = EquipmentName_"ReplayService"
 	set Settings($i(Settings)) = $lb("Host", "TargetConfigNames", "TransformRouter")
-	set sc = ..AddProductionItem(Name, "opc.ua.service.ReplayDataService", .Settings)
+	set sc = ..AddProductionItem(Name, "opc.ua.service.ReplayDataService", .Settings, 0)
 	if 'sc return ..BuildStatus("Error adding {} to production:", sc, Name)
 	
 	set Name = EquipmentName_"Subscription"
 	set Settings($i(Settings)) = $lb("Host", "TargetConfigNames", "TransformRouter")
-	set sc = ..AddProductionItem(Name, "opc.ua.service.SubscriptionService", .Settings)
+	set sc = ..AddProductionItem(Name, "opc.ua.service.SubscriptionService", .Settings, 0)
 	if 'sc return ..BuildStatus("Error adding {} to production:", sc, Name)
 	
 	set sc = ..Production.SaveToClass()
@@ -402,7 +402,7 @@ ClassMethod GetProductionConfig(Output Production As Ens.Config.Production) As %
 	set IsNew = 0
 	
 	; Get name of latest running production
-	set ProdName = "" ;;##class(Ens.Director).GetActiveProductionName()
+	set ProdName = ##class(Ens.Director).GetActiveProductionName()
 	if ProdName = "" {
 		; No current or previously used production; use default name
 		set ProdName = "opc.client.Production"
@@ -453,11 +453,13 @@ ClassMethod CreateProduction(Name As %String) As %Status
 }
 
 /// Adds a new item to the production, but only if it doesn't exist yet.
-Method AddProductionItem(Name As %String, ClassName As %String, ByRef Settings As %String) As %Status
+Method AddProductionItem(Name As %String, ClassName As %String, ByRef Settings As %String, Enabled As %Boolean = 1) As %Status
 {
 	; Add the item, unless it already exists
+	#dim Item As Ens.Config.Item
 	set Item = ..AddElement(..Production.Items, Name)
 	if Item = "" return $$$OK
+	set Item.Enabled = Enabled
 	
 	set Item.ClassName = ClassName
 	if $Get(Settings) Do Item.UpdateSettings(.Settings)
