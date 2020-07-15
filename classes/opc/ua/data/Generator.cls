@@ -41,7 +41,6 @@ Method GenerateImpl() As %Status
 {
 	; Load/create the class definition
 	set ClassName = ..GetClassName(..Config, .Exists)
-	Write ClassName,!
 	if Exists {
 		set ..ClassDef = ##class(%Dictionary.ClassDefinition).%OpenId(ClassName, , .sc)
 		if 'sc return sc

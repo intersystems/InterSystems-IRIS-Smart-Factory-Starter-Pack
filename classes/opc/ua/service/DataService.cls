@@ -14,7 +14,7 @@ Property TargetConfigNames As %String;
 Method SendData(DataObjId As %String) As %Status
 {
 	set Req = ##class(opc.ua.msg.TransformingReq).%New()
-	do Req.ReadingsSetObjectId(DataObjId)	
+	do Req.StagingSetObjectId(DataObjId)	
 	
 	set sc = ..SendRequestAsync(..TargetConfigNames, Req)
 	if 'sc return sc

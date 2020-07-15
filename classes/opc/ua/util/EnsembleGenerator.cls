@@ -70,7 +70,7 @@ Method GenerateImpl() As %Status
 	}
 	
 	; Create serving request class
-	set ..MessagePackage = "opc.client.msg"
+	set ..MessagePackage = ..Equipment.ClassPackage_".msg"
 	set sc = ..CreateServingReq()
 	if 'sc return sc
 	
@@ -90,7 +90,12 @@ Method GenerateImpl() As %Status
 	set sc = ..UpdateProduction()
 	if 'sc return sc
 	
-	quit $$$OK
+	; Compile compile all uncompiled classes in the package.
+	set sc = $System.OBJ.CompilePackage(..Equipment.ClassPackage, "uk-d")
+	if 'sc return sc
+	
+	
+	return $$$OK
 }
 
 /// Generates classes for a transforming stage.
@@ -101,9 +106,9 @@ Method GenerateTransforming(EquipConfig As opc.ua.config.EquipmentConfiguration)
 	
 	; Packages to use for various classes
 	set BasePkg = ..Equipment.ClassPackage
-	set ProcessPkg = BasePkg_".bp"
-	set RulePkg = BasePkg_".rule"
-	set TransformPkg = BasePkg_".dtl"
+	set ProcessPkg = BasePkg_".bp."_..Equipment.Name
+	set RulePkg = BasePkg_".rule."_..Equipment.Name
+	set TransformPkg = BasePkg_".dtl."_..Equipment.Name
 	
 	set ServingReqClass = ..MessagePackage_"."_..Equipment.Name_"ServingRequest"
 	
@@ -123,7 +128,7 @@ Method GenerateTransforming(EquipConfig As opc.ua.config.EquipmentConfiguration)
 	set Replacements("{DataClassIn}") = DataClassIn
 	set Replacements("{DataClassOut}") = DataClassOut
 	set Replacements("{RuleClass}") = RuleClass
-	set Replacements("{TransformName}") = TransformClass
+	set Replacements("{TransformClass}") = TransformClass
 	set Replacements("{ServingReqClass}") = ServingReqClass
 	set Replacements("{TransformingProperty}") = Config.Name
 	
@@ -141,7 +146,7 @@ Method GenerateTransforming(EquipConfig As opc.ua.config.EquipmentConfiguration)
 	kill Replacements
 	set Replacements("{InputClass}") = "opc.ua.msg.TransformingReq"
 	set Replacements("{OutputClass}") = DataClassOut
-	set Replacements("{InputRef}") = ".StagingData"
+	set Replacements("{InputRef}") = ".Staging"
 	
 	set sc = ..CreateDTL(TransformClass, "Transform", .Replacements)
 	if 'sc quit ..BuildStatus("Error creating DTL {}", sc, TransformClass)
@@ -156,9 +161,9 @@ Method GenerateServing(EquipConfig As opc.ua.config.EquipmentConfiguration) As %
 	set Config = EquipConfig.Configuration
 	
 	set BasePkg = ..Equipment.ClassPackage
-	set ProcessPkg = BasePkg_".bp"
-	set RulePkg = BasePkg_".rule"
-	set TransformPkg = BasePkg_".dtl"
+	set ProcessPkg = BasePkg_".bp."_..Equipment.Name
+	set RulePkg = BasePkg_".rule."_..Equipment.Name
+	set TransformPkg = BasePkg_".dtl."_..Equipment.Name
 	
 	set ServingReqClass = ..MessagePackage_"."_..Equipment.Name_"ServingRequest"
 	
@@ -191,7 +196,7 @@ Method GenerateServing(EquipConfig As opc.ua.config.EquipmentConfiguration) As %
 	; Replacement strings for DTL XData
 	set Replacements("{InputClass}") = ServingReqClass
 	set Replacements("{OutputClass}") = DataClassOut
-	set Replacements("{InputRef}") = ".StagingData"
+	set Replacements("{InputRef}") = ".Staging"
 	
 	set sc = ..CreateDTL(TransformClass, "Transform", .Replacements)
 	if 'sc quit ..BuildStatus("Error creating DTL {}", sc, TransformClass)
@@ -316,7 +321,7 @@ Method CreateServingReq(Output ServingReqClass As %String) As %Status
 	; Add property for staging data
 	set StagingDataClass = ##class(opc.ua.data.Generator).GetClassName(..StagingConfig)
 	#dim PropDef As %Dictionary.PropertyDefinition
-	set PropDef = ..GetElement(ClassDef.Properties, "StagingData")
+	set PropDef = ..GetElement(ClassDef.Properties, "Staging")
 	set PropDef.Type = StagingDataClass
 	set PropDef.SequenceNumber = $Increment(SequenceNumber)
 	
@@ -346,11 +351,11 @@ Method UpdateProduction() As %Status
 	set Replacements("{RuleContext}") = "EnsLib.MsgRouter.RoutingEngine"
 	set Replacements("{ProductionName}") = ..Production.%ClassName(1)
 	
-	set TransformRuleClass = "opc.client.rule.TransformRule"
+	set TransformRuleClass = ..Equipment.ClassPackage_".rule.TransformRule"
 	set sc = ..CreateRule(TransformRuleClass, "Rule", .Replacements)
 	if 'sc quit ..BuildStatus("Error creating rule {}", sc, TransformRuleClass)
 	
-	set ServingRuleClass = "opc.client.rule.ServingRule"
+	set ServingRuleClass = ..Equipment.ClassPackage_".rule.ServingRule"
 	set sc = ..CreateRule(ServingRuleClass, "Rule", .Replacements)
 	if 'sc quit ..BuildStatus("Error creating rule {}", sc, ServingRuleClass)
 	
@@ -385,8 +390,16 @@ Method UpdateProduction() As %Status
 	set sc = ..AddProductionItem(Name, "opc.ua.service.SubscriptionService", .Settings, 0)
 	if 'sc return ..BuildStatus("Error adding {} to production:", sc, Name)
 	
+	; Add email alert operation, if not present
+	
+	set Name = "EmailAlertOperation"
+	set sc = ..AddProductionItem(Name, "EnsLib.EMail.AlertOperation", .Settings, 0)
+	if 'sc return ..BuildStatus("Error adding {} to production:", sc, Name)
+	
+	
 	set sc = ..Production.SaveToClass()
 	if 'sc return ..BuildStatus("Error saving configuration for production {}:", sc, ..Production.Name)
+	
 	
 	return $$$OK
 }
@@ -396,23 +409,20 @@ Method UpdateProduction() As %Status
 /// Retrieves the production configuration to be used to add
 /// items to. Creates a new default production if one doesn't
 /// exist yet.
-ClassMethod GetProductionConfig(Output Production As Ens.Config.Production) As %Status
+Method GetProductionConfig(Output Production As Ens.Config.Production) As %Status
 {
 	; Did we create the production here?
 	set IsNew = 0
 	
-	; Get name of latest running production
+	; Get name of latest running production. If none, use default.
 	set ProdName = ##class(Ens.Director).GetActiveProductionName()
-	if ProdName = "" {
-		; No current or previously used production; use default name
-		set ProdName = "opc.client.Production"
+	if ProdName = "" set ProdName = ..Equipment.ClassPackage_".Production"
 		
-		; If the production class doesn't yet exist, create it
-		if '##class(%Dictionary.ClassDefinition).%ExistsId(ProdName) {
-			set sc = ..CreateProduction(ProdName)
-			if 'sc return ..BuildStatus("Error creating new production {}:", sc, ProdName)
-			set IsNew = 1
-		}
+	; If the production class doesn't yet exist, create it
+	if '##class(%Dictionary.ClassDefinition).%ExistsId(ProdName) {
+		set sc = ..CreateProduction(ProdName)
+		if 'sc return ..BuildStatus("Error creating new production {}:", sc, ProdName)
+		set IsNew = 1
 	}
 	
 	; Create configuration item to return
@@ -462,12 +472,12 @@ Method AddProductionItem(Name As %String, ClassName As %String, ByRef Settings A
 	set Item.Enabled = Enabled
 	
 	set Item.ClassName = ClassName
-	if $Get(Settings) Do Item.UpdateSettings(.Settings)
+	if $Get(Settings) do Item.UpdateSettings(.Settings)
 	
-	if $$$comClassKeyGet("opc.ua.service.DataService", $$$cCLASSprimarysuper) [ "~Ens.BusinessProcess~" {
+	if $$$comClassKeyGet(ClassName, $$$cCLASSprimarysuper) [ "~Ens.BusinessProcess~" {
 		; set the pool size of business processes to 1, which mimicks what
 		; the management portal does when adding one there.
-		if $ClassMethod(ClassName, "%IsA", "Ens.BusinessProcess") set Item.PoolSize = 1
+		set Item.PoolSize = 1
 	}
 	
 	kill Settings
@@ -542,17 +552,17 @@ XData TransformProcess [ XMLNamespace = "http://www.intersystems.com/bpl" ]
 {
 <process language='objectscript' request='{RequestClass}' response='{ResponseClass}' >
 <context>
-<property name='StagingData' type='{DataClassIn}' instantiate='0' />
-<property name='TransformingData' type='{DataClassOut}' instantiate='1' />
+<property name='Staging' type='{DataClassIn}' instantiate='0' />
+<property name='Transforming' type='{DataClassOut}' instantiate='1' />
 </context>
 <sequence  >
-<assign name="Data to context" property="context.StagingData" value="request.StagingData" action="set"  />
+<assign name="Data to context" property="context.Staging" value="request.Staging" action="set"  />
 <rule name='Process' rule='{RuleClass}' />
-<transform name='Transform' class='{TransformClass}' source='context.StagingData' target='context.TransformingData' />
+<transform name='Transform' class='{TransformClass}' source='context.Staging' target='context.Transforming' />
 <call name='Send to ServingRouter' target='ServingRouter' async='1' xpos='200' ypos='1950' >
 <request type='{ServingReqClass}' >
-<assign property="callrequest.StagingData" value="context.StagingData" action="set" />
-<assign property="callrequest.{TransformingProperty}" value="context.TransformingData" action="set" />
+<assign property="callrequest.Staging" value="context.Staging" action="set" />
+<assign property="callrequest.{TransformingProperty}" value="context.Transforming" action="set" />
 </request>
 <response type='Ens.Response' />
 </call>
@@ -565,11 +575,11 @@ XData ServingProcess [ XMLNamespace = "http://www.intersystems.com/bpl" ]
 {
 <process language='objectscript' request='{RequestClass}' response='{ResponseClass}' >
 <context>
-<property name='ServingData' type='{DataClassOut}' instantiate='1' />
+<property name='Serving' type='{DataClassOut}' instantiate='1' />
 </context>
 <sequence  >
 <rule name='Process' rule='{RuleClass}' />
-<transform name='Transform' class='{TransformClass}' source='request' target='context.ServingData' />
+<transform name='Transform' class='{TransformClass}' source='request' target='context.Serving' />
 </sequence>
 </process>
 }
