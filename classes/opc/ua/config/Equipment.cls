@@ -14,7 +14,7 @@ Property Description As %String(%JSONFIELDNAME = "description", MAXLEN = 1000);
 Property EquipmentType As opc.ua.config.EquipmentType(%JSONFIELDNAME = "equipment_type");
 
 /// Class package where the equipment data, dtl, bp and routers will be generated. All client specific classes.
-Property ClassPackage As %String(%JSONFIELDNAME = "class_package") [ InitialExpression = "opc.clientdata" ];
+Property ClassPackage As %String(%JSONFIELDNAME = "class_package") [ InitialExpression = "opc.client" ];
 
 /// Location of the machine
 Property Location As %String(%JSONFIELDNAME = "location", MAXLEN = 100);
