@@ -38,21 +38,6 @@ ClassMethod TimeStampSubstract(pTimeStamp1 As %TimeStamp, pTimeStamp2 As %TimeSt
 	return $JUSTIFY($System.SQL.DATEDIFF(pOutputFormat, pTimeStamp1, pTimeStamp2),1,0)
 }
 
-/// Determine if there is a mispass
-/// BaseValue - is the value to measure the yield from
-/// Yield - yield for the basevalue
-/// CurValue - field to compare against the BaseValue
-/// -11 < (14 - 20) of -11 > (14 + 20)
-ClassMethod IsMisPass(pBaseValue As %Double, pYield As %Double, pCurValue As %Double) As %Boolean [ Final ]
-{
-	
-	if ((pCurValue < (pBaseValue - pYield)) || (pCurValue > (pBaseValue + pYield))) {		
-		return 1
-	} else {		
-		return 0
-	}
-}
-
 /// Retrieve the persistent object identifier as bigint
 ClassMethod GetPersistentId(pObj As %Persistent) As %BigInt [ Final ]
 {
@@ -68,18 +53,6 @@ ClassMethod GetEquipmentName(pEquipmentId As %BigInt) As %String [ Final ]
 		return tName
 	}
 	
-	return ""
-}
-
-/// Get MisPas Norm
-ClassMethod GetMisPasNorm(EquipmentID As %Integer, AttributeName As %String) As %Integer [ Final ]
-{
-	&sql(SELECT ID INTO :tId FROM opc_ua_config.MisPasNorm WHERE EquipmentID = :EquipmentID)
-	if SQLCODE = 0 {
-		$$$TRACE("Found Equipment MisPas Norm")
-		return $Property(##class(opc.ua.config.MisPasNorm).%OpenId(tId), AttributeName)
-	}
-
 	return ""
 }
 
@@ -328,7 +301,6 @@ ClassMethod GetRecipeName(Parts... As %Integer) As %String [ Final ]
 }
 
 /// Get the current shift identifier. Shift times can be added in local time format. When this is True put 
-
 /// pConvertToLocalTimestamp to 1
 
 }

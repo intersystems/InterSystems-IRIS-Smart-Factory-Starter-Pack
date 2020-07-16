@@ -32,7 +32,7 @@ Index OnTimeStamp On TimeStamp;
 
 // =====
 
-ClassMethod Insert(Input As opc.ua.rest.Data, Output Id As %String) As %Status
+ClassMethod Insert(Input As opc.ua.rest.data.Data, Output Id As %String) As %Status
 {
 	Set Id = ""
 	
