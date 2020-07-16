@@ -2,7 +2,7 @@ Include Ensemble
 
 /// Smart Industry datamodel generation API<br/>
 /// Business logic class defined by OpenAPI in opc.ua.rest.datamodel.spec<br/>
-/// Updated Jul 15, 2020 10:15:52
+/// Updated Jul 16, 2020 15:52:10
 Class opc.ua.rest.datamodel.impl Extends %REST.Impl [ ProcedureBlock ]
 {
 
@@ -14,45 +14,35 @@ Parameter ExposeServerExceptions = 1;
 ///     body, Datamodel generation<br/>
 ClassMethod PostDataModelGeneration(body As %DynamicObject) As %DynamicObject
 {
-	Set Equipment = body."equipment_name"
-	Set Config = body."configuration_name"
+	Set EquipmentName = body."equipment_name"
 	
-	If Config '= "" {
-		;== Generate data classes for a given equipment+configuration
-		
-		; Get all equipment configurations matching the specification (should be only one)
-		Set stm = ##class(%SQL.Statement).%New()
-		Set sc = stm.%PrepareClassQuery("opc.ua.config.EquipmentConfiguration", "ByEquipmentCfg")
-		If 'sc Quit ..ServerError("Error preparing query for '{}'/'{}'", sc, Equipment, Config)
-		#dim rs As %SQL.StatementResult
-		Set rs = stm.%Execute(Equipment, Config)
-		
-		Set Count = 0
-		While rs.%Next() {
-			Set Count = Count + 1
-			Set Id = rs.%Get("ID")
-			Set sc = ##class(opc.ua.data.Generator).Generate(Id)
-			If 'sc Return ..ServerError("Error generating data classes for EquipmentConfiguration '{}'", sc, Id)
-		}
-		If 'Count {
-			; Combination not found
-			Do ..%SetStatusCode(404)
-			Quit ""
-		}
+	;== Generate data classes for all equipment+configuration
 	
-	} Else {
-		;== Generate Ensemble classes for the equipment (all configurations)
+	#dim Equipment As opc.ua.config.Equipment
+	Set Equipment = ##class(opc.ua.config.Equipment).SearchByName(EquipmentName, .sc)
+	If Equipment = "" return ..ServerError("Error opening equipment '{}'", sc, EquipmentName)
+	
+	; Generate the data classes
+	Set key = "", Count = 0
+	For  {
+		Set EquipConfig = Equipment.EquipmentConfiguration.GetNext(.key)
+		If key = "" Quit
 		
-		; Get equipment id
-		If '##class(opc.ua.config.Equipment).EquipmentNameIndexExists(Equipment, .EquipId) {
-			Do ..%SetStatusCode(404)
-			Quit ""
-		}
-		
-		; Generate or update the Ensemble classes
-		Set sc = ##class(opc.ua.util.EnsembleGenerator).Generate(EquipId)
-		If 'sc Return ..ServerError("Error generating Ensemble classes for Equipment '{}'", sc, EquipId)
+		Set Count = Count + 1
+		Set sc = ##class(opc.ua.data.Generator).Generate(EquipConfig)
+		If 'sc Return ..ServerError("Error generating data classes for EquipmentConfiguration '{}'", sc, EquipConfig.%Id())
 	}
+	If Count = 0 {
+		; No configurations for this equipment
+		Do ..%SetStatusCode(404)
+		Quit ""
+	}
+	
+	;== Generate Ensemble classes for the equipment (all configurations)
+	
+	; Generate or update the Ensemble classes
+	Set sc = ##class(opc.ua.util.EnsembleGenerator).Generate(Equipment)
+	If 'sc Return ..ServerError("Error generating Ensemble classes for Equipment '{}'", sc, EquipmentName)
 	
 	; Return 201 Created
 	Do ..%SetStatusCode(201)

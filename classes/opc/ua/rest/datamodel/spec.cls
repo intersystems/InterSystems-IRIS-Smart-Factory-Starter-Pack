@@ -67,9 +67,6 @@ XData OpenAPI [ MimeType = application/json ]
       "properties":{
         "equipment_name":{
           "type":"string"
-        },
-        "configuration_name":{
-          "type":"string"
         }
       }
     }
