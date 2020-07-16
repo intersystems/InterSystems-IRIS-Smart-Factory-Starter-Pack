@@ -69,9 +69,13 @@ class SubscriptionHandler:
             readings.clear()
 
         else:
-            # _logger.info('data: %s=%s', node.nodeid.Identifier, val[0])
-            id = node.nodeid
-            readings.append((f"ns={id.NamespaceIndex};s={id.Identifier}", val[0]))
+            try:
+                val = val[0] if isinstance(val, list) else val
+                _logger.info('data: %s=%s', node.nodeid.Identifier, val)
+                id = node.nodeid
+                readings.append((f"ns={id.NamespaceIndex};s={id.Identifier}", val))
+            except BaseException:
+                _logger.exception("Error")
 
 
 

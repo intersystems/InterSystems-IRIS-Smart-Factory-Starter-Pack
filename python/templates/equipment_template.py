@@ -16,7 +16,7 @@ subscription_nodes = [##SUBSCRIPTIONNODES##]
 polling_interval = ##POLLINGINTERVAL##
 
 # Log settings
-log_level = logging.INFO
+log_level = logging.ERROR
 log_file = ##LOGFILEPATH##
 
 # Execute the subscription listener
