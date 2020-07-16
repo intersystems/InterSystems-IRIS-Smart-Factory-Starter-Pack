@@ -2,7 +2,7 @@ Include Ensemble
 
 /// Smart Industry equipment configuration<br/>
 /// Business logic class defined by OpenAPI in opc.ua.rest.equipment.spec<br/>
-/// Updated Jul 6, 2020 18:11:52
+/// Updated Jul 16, 2020 13:00:15
 Class opc.ua.rest.equipment.impl Extends %REST.Impl [ ProcedureBlock ]
 {
 
@@ -383,6 +383,53 @@ ClassMethod AddNodeToConfiguration(configurationname As %String, nodeid As %Stri
     
 Error
 	Set $ZTrap = ""
+	return ..ReturnError(500, "Internal server error", ,"Error trapped: "_$ZError)
+}
+
+/// Add nodes to the configuration<br/>
+/// The method arguments hold values for:<br/>
+///     configuration_name<br/>
+///     body, Add new nodes to the configuration<br/>
+ClassMethod PostConfigurationNodes(configurationname As %String, body As %DynamicArray) As %DynamicObject
+{
+    Set $ZTrap = "Error"
+    
+    if (configurationname = "") return ..ReturnError(400, "Bad Request", ,"Configuration name required")
+    
+    set tConfiguration = ##class(opc.ua.config.Configuration).SearchByName(configurationname)
+    if tConfiguration = "" return ..ReturnError(404, "Not Found", ,"Configuration "_configurationname) 
+             	
+    set tSC= ##class(opc.ua.util.JSON).LoadJSONList(body,"opc.ua.config.Node",.tNodeList)
+    if $$$ISERR(tSC) {
+		return ..ReturnError(500, "Can not add nodes to configuration "_configurationname, tSC)
+	}
+	
+	// start a transaction
+ 	TSTART
+	
+    for i=1:1:tNodeList.Count() {	    
+	    set tNode = tNodeList.GetAt(i)	    	    
+	    set tSC = tNode.%Save()
+	    
+	    set tConfigurationNode = ##class(opc.ua.config.ConfigurationNode).%New()
+	    set tConfigurationNode.Configuration = tConfiguration
+	    set tConfigurationNode.Node = tNode
+	    set tSC= tConfigurationNode.%Save()
+	    
+	    if $$$ISERR(tSC) {
+		    TROLLBACK
+		    return ..ReturnError(500, "Can not add nodes to configuration "_configurationname, tSC)
+	    }
+    }       
+    
+    TCOMMIT
+    
+    do ..%SetStatusCode(201)
+    return ""
+    
+Error
+	Set $ZTrap = ""
+	TROLLBACK
 	return ..ReturnError(500, "Internal server error", ,"Error trapped: "_$ZError)
 }
 

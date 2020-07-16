@@ -508,6 +508,48 @@ XData OpenAPI [ MimeType = application/json ]
       }
     },
     "/configurations/{configuration_name}/nodes":{
+      "post":{
+        "tags":[
+          "Configuration"
+        ],
+        "summary":"Add nodes to the configuration",
+        "operationId":"PostConfigurationNodes",
+        "description":"Add nodes to the configuration",
+        "consumes":[
+          "application/json"
+        ],
+        "produces":[
+          "application/json"
+        ],
+        "parameters":[
+          {
+            "in":"path",
+            "name":"configuration_name",
+            "type":"string",
+            "required":true
+          },
+          {
+            "in":"body",
+            "name":"body",
+            "description":"Add new nodes to the configuration",
+            "required":true,
+            "schema":{
+              "$ref":"#/definitions/Nodes"
+            }
+          }
+        ],
+        "responses":{
+          "201":{
+            "description":"Created"            
+          },
+          "400":{
+            "description":"Bad Request"
+          },
+          "500":{
+            "description":"Internal Server Error"
+          }
+        }
+      },
       "get":{
         "tags":[
           "Configuration"
@@ -761,7 +803,7 @@ XData OpenAPI [ MimeType = application/json ]
         "description":{
           "type":"string"
         }
-      }   
+}   
     },       
 	"EquipmentTypes":{
 	  "type":"array",
