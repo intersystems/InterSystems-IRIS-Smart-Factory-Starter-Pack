@@ -408,7 +408,7 @@ Method UpdateProduction() As %Status
 	
 	set Name = EquipmentName_"Data"
 	set Settings($i(Settings)) = $lb("Host", "TargetConfigNames", "TransformRouter")
-	set sc = ..AddProductionItem(Name, "opc.ua.service.DataService", .Settings, 0)
+	set sc = ..AddProductionItem(Name, "opc.ua.service.DataService", .Settings, 1)
 	if 'sc return ..BuildStatus("Error adding {} to production:", sc, Name)
 	
 	set Name = EquipmentName_"ReplayService"
