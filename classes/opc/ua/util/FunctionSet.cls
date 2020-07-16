@@ -2,7 +2,7 @@ Include Ensemble
 
 /// This class contains a set of utility methods that can be used for metrics calculations 
 /// by Business Rules, DTL transforms and the like.
-Class opc.ua.util.FunctionSet Extends Ens.Rule.FunctionSet [ Abstract, System = 4 ]
+Class opc.ua.util.FunctionSet Extends Ens.Rule.FunctionSet [ Abstract, DependsOn = (opc.ua.config.Shift, opc.ua.config.Equipment, opc.ua.config.OEEBenchMark) ]
 {
 
 /* NOTE: the names of these function arguments are used by

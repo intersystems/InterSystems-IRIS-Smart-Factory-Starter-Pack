@@ -1,5 +1,5 @@
 /// Node definition
-Class opc.ua.config.Node Extends (%Persistent, %JSON.Adaptor) [ DependsOn = opc.ua.config.ConfigurationNode ]
+Class opc.ua.config.Node Extends (%Persistent, %JSON.Adaptor)
 {
 
 /// Node GUID
