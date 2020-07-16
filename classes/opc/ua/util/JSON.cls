@@ -47,6 +47,12 @@ ClassMethod LoadJSONList(Input As %DynamicArray, ClassName As %String, Output Ob
 		set ClassName = Objects.ElementType
 	}
 	
+	if Input.%Extends("%CSP.CharacterStream") {
+		; Fix for bug in 2019.1: when input is array, content is passed
+		; as-is, instead of being converted to %DynamicArray.
+		Set Input = ##class(%DynamicArray).%FromJSON(Input)
+	}
+	
 	; Loopt through objects in JSON array
 	#dim it As %Iterator.Array
 	set it = Input.%GetIterator()
