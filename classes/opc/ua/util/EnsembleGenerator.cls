@@ -437,11 +437,22 @@ Method GetProductionConfig(Output Production As Ens.Config.Production) As %Statu
 /// Creates a new production with the given name.
 ClassMethod CreateProduction(Name As %String) As %Status
 {
-	; The physical production class
-	set Prod = ##class(%Dictionary.ClassDefinition).%New(Name, 25)
-	set Prod.Super = "Ens.Production"
-	set XData = ..GetElement(Prod.XDatas, "ProductionDefinition")
-	Do XData.Data.WriteLine("<Production></Production>")
+	; Try to open template production
+	set Tpl = ##class(%Dictionary.ClassDefinition).%OpenId("opc.ua.Production", , .sc)
+	if sc {
+		#dim Prod As %Dictionary.ClassDefinition
+		Set Prod = Tpl.%ConstructClone(1)
+		Set Prod.Name = Name
+		
+	} Else {
+		; If the template isn't there, create a new production class
+		set Prod = ##class(%Dictionary.ClassDefinition).%New(Name, 25)
+		set Prod.Super = "Ens.Production"
+		set XData = ..GetElement(Prod.XDatas, "ProductionDefinition")
+		Do XData.Data.WriteLine("<Production></Production>")
+		
+	}
+	
 	set sc = Prod.%Save()
 	if 'sc return ..BuildStatus("Error saving new production {}:", sc, Name)
 	
