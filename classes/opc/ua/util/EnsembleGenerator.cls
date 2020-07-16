@@ -69,8 +69,11 @@ Method GenerateImpl() As %Status
 		}
 	}
 	
-	; Create serving request class
 	set ..MessagePackage = ..Equipment.ClassPackage_".msg"
+	
+	; Create transforming and serving request classes
+	set sc = ..CreateTransformingReq()
+	if 'sc return sc
 	set sc = ..CreateServingReq()
 	if 'sc return sc
 	
@@ -110,6 +113,7 @@ Method GenerateTransforming(EquipConfig As opc.ua.config.EquipmentConfiguration)
 	set RulePkg = BasePkg_".rule."_..Equipment.Name
 	set TransformPkg = BasePkg_".dtl."_..Equipment.Name
 	
+	set TransformingReqClass = ..MessagePackage_"."_..Equipment.Name_"TransformingRequest"
 	set ServingReqClass = ..MessagePackage_"."_..Equipment.Name_"ServingRequest"
 	
 	; Names of data classes the BP receives and creates
@@ -118,12 +122,12 @@ Method GenerateTransforming(EquipConfig As opc.ua.config.EquipmentConfiguration)
 	
 	; Name of business process, rule, DTL
 	set ProcessClass = ProcessPkg_"."_Config.ConfigType_"."_Config.Name
-	set ProcessName = ..Equipment.Name_" "_Config.Name
+	set ProcessName = Config.Name
 	set RuleClass = RulePkg_"."_Config.ConfigType_"."_Config.Name
 	set TransformClass = TransformPkg_"."_Config.ConfigType_"."_Config.Name
 	
 	; Replacement strings for BPL XData
-	set Replacements("{RequestClass}") = "opc.ua.msg.TransformingReq"
+	set Replacements("{RequestClass}") = TransformingReqClass
 	set Replacements("{ResponseClass}") = "Ens.Response"
 	set Replacements("{DataClassIn}") = DataClassIn
 	set Replacements("{DataClassOut}") = DataClassOut
@@ -144,7 +148,7 @@ Method GenerateTransforming(EquipConfig As opc.ua.config.EquipmentConfiguration)
 	
 	; Replacement strings for DTL XData
 	kill Replacements
-	set Replacements("{InputClass}") = "opc.ua.msg.TransformingReq"
+	set Replacements("{InputClass}") = TransformingReqClass
 	set Replacements("{OutputClass}") = DataClassOut
 	set Replacements("{InputRef}") = ".Staging"
 	
@@ -172,7 +176,7 @@ Method GenerateServing(EquipConfig As opc.ua.config.EquipmentConfiguration) As %
 	
 	; Name of business process, rule, DTL
 	set ProcessClass = ProcessPkg_"."_Config.ConfigType_"."_Config.Name
-	set ProcessName = ..Equipment.Name_" "_Config.Name
+	set ProcessName = Config.Name
 	set RuleClass = RulePkg_"."_Config.ConfigType_"."_Config.Name
 	set TransformClass = TransformPkg_"."_Config.ConfigType_"."_Config.Name
 	
@@ -308,6 +312,33 @@ Method CreateDTL(ClassName As %String, TplName As %String, ByRef Replacements As
 /// Creates the request class for all Serving business processes for
 /// the equipment. Will contain a property for each of the transforming
 /// data classes.
+Method CreateTransformingReq(Output TransformingReqClass As %String) As %Status
+{
+	set TransformingReqClass = ..MessagePackage_"."_..Equipment.Name_"TransformingRequest"
+	
+	; Don't do anything if the class already exists
+	if ##class(%Dictionary.ClassDefinition).%ExistsId(TransformingReqClass) quit $$$OK
+	
+	set ClassDef = ##class(%Dictionary.ClassDefinition).%New(TransformingReqClass, 25)
+	set ClassDef.Super = "Ens.Response"
+	
+	; Add property for staging data
+	set StagingDataClass = ##class(opc.ua.data.Generator).GetClassName(..StagingConfig)
+	#dim PropDef As %Dictionary.PropertyDefinition
+	set PropDef = ..GetElement(ClassDef.Properties, "Staging")
+	set PropDef.Type = StagingDataClass
+	set PropDef.SequenceNumber = $Increment(SequenceNumber)
+	
+	; Save
+	set sc = ClassDef.%Save()
+	if 'sc return sc
+	
+	return $$$OK
+}
+
+/// Creates the request class for all Serving business processes for
+/// the equipment. Will contain a property for each of the transforming
+/// data classes.
 Method CreateServingReq(Output ServingReqClass As %String) As %Status
 {
 	set ServingReqClass = ..MessagePackage_"."_..Equipment.Name_"ServingRequest"
@@ -375,17 +406,17 @@ Method UpdateProduction() As %Status
 	
 	set EquipmentName = ..Equipment.Name
 	
-	set Name = EquipmentName_" Data"
+	set Name = EquipmentName_"Data"
 	set Settings($i(Settings)) = $lb("Host", "TargetConfigNames", "TransformRouter")
 	set sc = ..AddProductionItem(Name, "opc.ua.service.DataService", .Settings, 0)
 	if 'sc return ..BuildStatus("Error adding {} to production:", sc, Name)
 	
-	set Name = EquipmentName_" ReplayService"
+	set Name = EquipmentName_"ReplayService"
 	set Settings($i(Settings)) = $lb("Host", "TargetConfigNames", "TransformRouter")
 	set sc = ..AddProductionItem(Name, "opc.ua.service.ReplayDataService", .Settings, 0)
 	if 'sc return ..BuildStatus("Error adding {} to production:", sc, Name)
 	
-	set Name = EquipmentName_" Subscription"
+	set Name = EquipmentName_"Subscription"
 	set Settings($i(Settings)) = $lb("Host", "TargetConfigNames", "TransformRouter")
 	set sc = ..AddProductionItem(Name, "opc.ua.service.SubscriptionService", .Settings, 0)
 	if 'sc return ..BuildStatus("Error adding {} to production:", sc, Name)

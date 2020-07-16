@@ -45,7 +45,7 @@ ClassMethod addDataChangeNotification(equipment As %String, configuration As %St
 		
 	/// Create Business Service
 	#dim bs As opc.ua.service.DataService
-	set sc = ##class(Ens.Director).CreateBusinessService(EquipCfg.Equipment.Name_" Data", .bs)
+	set sc = ##class(Ens.Director).CreateBusinessService(EquipCfg.Equipment.Name_"Data", .bs)
 	if $$$ISERR(sc) return ..ReturnError(500, "Problem creating business service", "Error creating business service", sc)
 		
 	; Send the data to next stage
