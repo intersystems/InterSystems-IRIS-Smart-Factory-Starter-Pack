@@ -148,9 +148,9 @@ Method GenerateTransforming(EquipConfig As opc.ua.config.EquipmentConfiguration)
 	
 	; Replacement strings for DTL XData
 	kill Replacements
-	set Replacements("{InputClass}") = TransformingReqClass
+	set Replacements("{InputClass}") = DataClassIn
 	set Replacements("{OutputClass}") = DataClassOut
-	set Replacements("{InputRef}") = ".Staging"
+	set Replacements("{InputRef}") = ""
 	
 	set sc = ..CreateDTL(TransformClass, "Transform", .Replacements)
 	if 'sc quit ..BuildStatus("Error creating DTL {}", sc, TransformClass)
