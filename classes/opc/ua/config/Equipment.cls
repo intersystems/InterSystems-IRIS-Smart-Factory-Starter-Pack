@@ -68,6 +68,7 @@ ClassMethod GetAllEquipment() As %ListOfObjects
 /// Get the equipment by specifying the name
 ClassMethod SearchByName(pName As %String, Output Status As %Status) As opc.ua.config.Equipment
 {
+	set Status = $$$OK
 	set tEquipment = ""
 	&sql(SELECT ID INTO :id FROM opc_ua_config.Equipment WHERE name=:pName)
 	if (SQLCODE = 0) {

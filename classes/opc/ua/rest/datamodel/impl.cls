@@ -20,7 +20,11 @@ ClassMethod PostDataModelGeneration(body As %DynamicObject) As %DynamicObject
 	
 	#dim Equipment As opc.ua.config.Equipment
 	Set Equipment = ##class(opc.ua.config.Equipment).SearchByName(EquipmentName, .sc)
-	If Equipment = "" return ..ServerError("Error opening equipment '{}'", sc, EquipmentName)
+	If 'sc return ..ServerError("Error opening equipment '{}'", sc, EquipmentName)
+	If Equipment = "" {
+		Do ..%SetStatusCode(404)
+		Quit ##class(opc.ua.rest.Error).GenerateErrorInJSON(400, "Equipment '"_EquipmentName_"' not found.")
+	}
 	
 	; Generate the data classes
 	Set key = "", Count = 0
@@ -35,7 +39,7 @@ ClassMethod PostDataModelGeneration(body As %DynamicObject) As %DynamicObject
 	If Count = 0 {
 		; No configurations for this equipment
 		Do ..%SetStatusCode(404)
-		Quit ""
+		Quit ##class(opc.ua.rest.Error).GenerateErrorInJSON(400, "No configurations for '"_EquipmentName_"' found.")
 	}
 	
 	;== Generate Ensemble classes for the equipment (all configurations)
