@@ -142,7 +142,7 @@ Method GenerateTransforming(EquipConfig As opc.ua.config.EquipmentConfiguration)
 	; Replacement strings for business rule
 	kill Replacements
 	set Replacements("{RuleContext}") = ProcessClass_".Context"
-	set Replacements("{ProductionName}") = ""
+	set Replacements("{ProductionName}") = ..Production.Name
 	set sc = ..CreateRule(RuleClass, "Rule", .Replacements)
 	if 'sc quit ..BuildStatus("Error creating rule {}", sc, RuleClass)
 	
@@ -193,7 +193,7 @@ Method GenerateServing(EquipConfig As opc.ua.config.EquipmentConfiguration) As %
 	; Replacement strings for business rule
 	kill Replacements
 	set Replacements("{RuleContext}") = ProcessClass_".Context"
-	set Replacements("{ProductionName}") = ""
+	set Replacements("{ProductionName}") = ..Production.Name
 	set sc = ..CreateRule(RuleClass, "Rule", .Replacements)
 	if 'sc quit ..BuildStatus("Error creating rule {}", sc, RuleClass)
 	
@@ -253,10 +253,16 @@ Method CreateRule(ClassName As %String, TplName As %String, ByRef Replacements A
 	set ClassDef = ##class(%Dictionary.ClassDefinition).%New(ClassName, 25)
 	set ClassDef.Super = "Ens.Rule.Definition"
 	
+	#dim Parm As %Dictionary.ParameterDefinition
+	set Parm = ..GetElement(ClassDef.Parameters, "RuleAssistClass")
+	set Parm.Default = "EnsLib.MsgRouter.RuleAssist"
+	Set Parm.SequenceNumber = $Increment(SeqNr)
+	
 	; Insert default rule definition XData block
 	set RuleDef = ##class(%Dictionary.XDataDefinition).%OpenId(..%ClassName(1)_"||"_TplName)
 	set RuleDef = RuleDef.%ConstructClone()
 	set RuleDef.Name = "RuleDefinition"
+	Set RuleDef.SequenceNumber = $Increment(SeqNr)
 	do ClassDef.XDatas.Insert(RuleDef)
 	
 	; Handle replacements
@@ -380,7 +386,7 @@ Method UpdateProduction() As %Status
 	; Create the two routing rules, if they don't exist
 	
 	set Replacements("{RuleContext}") = "EnsLib.MsgRouter.RoutingEngine"
-	set Replacements("{ProductionName}") = ..Production.%ClassName(1)
+	set Replacements("{ProductionName}") = ..Production.Name
 	
 	set TransformRuleClass = ..Equipment.ClassPackage_".rule.TransformRule"
 	set sc = ..CreateRule(TransformRuleClass, "Rule", .Replacements)
