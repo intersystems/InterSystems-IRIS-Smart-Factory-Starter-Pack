@@ -375,17 +375,17 @@ Method UpdateProduction() As %Status
 	
 	set EquipmentName = ..Equipment.Name
 	
-	set Name = EquipmentName_"Data"
+	set Name = EquipmentName_" Data"
 	set Settings($i(Settings)) = $lb("Host", "TargetConfigNames", "TransformRouter")
 	set sc = ..AddProductionItem(Name, "opc.ua.service.DataService", .Settings, 0)
 	if 'sc return ..BuildStatus("Error adding {} to production:", sc, Name)
 	
-	set Name = EquipmentName_"ReplayService"
+	set Name = EquipmentName_" ReplayService"
 	set Settings($i(Settings)) = $lb("Host", "TargetConfigNames", "TransformRouter")
 	set sc = ..AddProductionItem(Name, "opc.ua.service.ReplayDataService", .Settings, 0)
 	if 'sc return ..BuildStatus("Error adding {} to production:", sc, Name)
 	
-	set Name = EquipmentName_"Subscription"
+	set Name = EquipmentName_" Subscription"
 	set Settings($i(Settings)) = $lb("Host", "TargetConfigNames", "TransformRouter")
 	set sc = ..AddProductionItem(Name, "opc.ua.service.SubscriptionService", .Settings, 0)
 	if 'sc return ..BuildStatus("Error adding {} to production:", sc, Name)
