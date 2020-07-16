@@ -82,26 +82,17 @@ ClassMethod SearchByName(pName As %String, Output Status As %Status) As opc.ua.c
 /// Standaard get the current equipment configurations
 Method SearchEquipmentConfigurations(pIsCurrentVersion As %Boolean = 1, Output Status As %Status) As %ListOfObjects
 {
-	
+	set Status = $$$OK
 	set tConfigurationList = ##class(%ListOfObjects).%New()
-	set tName = ..Name
-		        
-	&sql(DECLARE C1 CURSOR FOR
-        SELECT Configuration->ID INTO :tConfigurationId
-	       FROM opc_ua_config.EquipmentConfiguration 
-	      WHERE Equipment->Name = :tName	        
-	        AND Configuration->IsCurrentVersion = :pIsCurrentVersion)	       
-    &sql(OPEN C1)
-    if SQLCODE '= 0 quit tConfigurationList
-    &sql(FETCH C1)
-    while (SQLCODE = 0) {
-    	set tConfiguration = ##class(opc.ua.config.Configuration).%OpenId(tConfigurationId,,.tSc)
-    	if ('$$$ISERR(tSc)) {
-    		Do tConfigurationList.Insert(tConfiguration)    		
-    	}
-    &sql(FETCH C1)
-    }
-	&sql(CLOSE C1)     
+	
+	set Query = "SELECT Configuration->ID FROM opc_ua_config.EquipmentConfiguration"
+	set Query = Query_" WHERE Equipment->Name = ? AND Configuration->IsCurrentVersion = ?"
+	#dim rs As %SQL.StatementResult
+	set rs = ##class(%SQL.Statement).%ExecDirect(, Query, ..Name, pIsCurrentVersion)
+	while rs.%Next() {
+		set Config = ##class(opc.ua.config.Configuration).%OpenId(rs.ID, , .sc)
+		if sc do tConfigurationList.Insert(Config)
+	}
 	
 	return tConfigurationList
 }
@@ -125,26 +116,19 @@ Method SearchCurrentConfigurationByName(pConfigurationName As %String, Output St
 }
 
 /// Get the nodes for the specified configuration
-Method GetNodesForConfiguration(pConfigurationName As %String, pConfigType As %String) As %ListOfObjects
+ClassMethod GetNodesForConfiguration(pConfigurationName As %String, pConfigType As %String) As %ListOfObjects
 {
 	set tNodeList = ##class(%ListOfObjects).%New()
 	
-	&sql(DECLARE C1 CURSOR FOR
-        SELECT Node INTO :nodeId FROM opc_ua_config.ConfigurationNode 
-	       WHERE Configuration->Name = :pConfigurationName
-	       AND Configuration->ConfigType = :pConfigType)
-    &sql(OPEN C1)
-    If SQLCODE '= 0 Quit tNodeList
-    &sql(FETCH C1)
-    while (SQLCODE = 0) {
-    	set tNode = ##class(opc.ua.config.Node).%OpenId(nodeId,,.sc)
-    	if ('$$$ISERR(sc)) {
-    		Do tNodeList.Insert(tNode)    		
-    	}	
-    	&sql(FETCH C1)
-    }
-    &sql(CLOSE C1)
-		
+	set Query = "SELECT Node FROM opc_ua_config.ConfigurationNode WHERE Configuration->Name = ?"
+	set Query = Query_" AND Configuration->ConfigType = ?"
+	#dim rs As %SQL.StatementResult
+	set rs = ##class(%SQL.Statement).%ExecDirect(, Query, pConfigurationName, pConfigType)
+	while rs.%Next() {
+		set Node = ##class(opc.ua.config.Node).%OpenId(rs.Node, , .sc)
+		if sc do tNodeList.Insert(Node)
+	}
+	
 	return tNodeList
 }
 

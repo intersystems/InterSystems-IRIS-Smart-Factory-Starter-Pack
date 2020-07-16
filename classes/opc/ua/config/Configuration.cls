@@ -97,22 +97,14 @@ ClassMethod GetNodes(pConfigurationName As %String) As %ListOfObjects
 {
 	set tNodeList = ##class(%ListOfObjects).%New()
 		
-	&sql(DECLARE C1 CURSOR FOR
-        SELECT Node INTO :tNodeId FROM opc_ua_config.ConfigurationNode 
-	       WHERE Configuration->Name = :pConfigurationName)
-    &sql(OPEN C1)
-    If SQLCODE '= 0 Quit tNodeList       
-    &sql(FETCH C1)
-    while (SQLCODE = 0) {
-    	set tNode = ##class(opc.ua.config.Node).%OpenId(tNodeId,,.tSc)
-    	if ('$$$ISERR(tSc)) {	    	
-    		do tNodeList.Insert(tNode)    		
-    	}		
-    	&sql(FETCH C1)
-    }
-    &sql(CLOSE C1)
-		
-		
+	set Query = "SELECT Node FROM opc_ua_config.ConfigurationNode WHERE Configuration->Name = ?"
+	#dim rs As %SQL.StatementResult
+	set rs = ##class(%SQL.Statement).%ExecDirect(, Query, pConfigurationName)
+	while rs.%Next() {
+		set Node = ##class(opc.ua.config.Node).%OpenId(rs.Node, , .sc)
+		if sc do tNodeList.Insert(Node)
+	}
+	
 	return tNodeList
 }
 
