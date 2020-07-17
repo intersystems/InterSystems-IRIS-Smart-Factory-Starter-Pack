@@ -29,10 +29,10 @@ Property EffectiveEnd As %TimeStamp(%JSONFIELDNAME = "effective_end");
 /// Add the standard OEE fields when this property is set 
 Property StandardOEEFields As %Boolean(%JSONFIELDNAME = "standard_oee_fields") [ InitialExpression = 0 ];
 
-/// Create the PowerBi dataset via the configured PowerBI operation. Be aware that this connector
-/// needs to be correctly configured
-Property PowerBiDataSet As %Boolean(%JSONFIELDNAME = "create_powerbi_dataset") [ InitialExpression = 0 ];
-
+/* TBD. Create the PowerBi dataset via the configured PowerBI operation. Be aware that
+// this connector needs to be correctly configured.
+// Property PowerBiDataSet As %Boolean(%JSONFIELDNAME = "create_powerbi_dataset") [ InitialExpression = 0 ];
+*/
 /// Bridge property for many-to-many relationship to configuration
 Relationship EquipmentConfiguration As opc.ua.config.EquipmentConfiguration(%JSONINCLUDE = "None") [ Cardinality = many, Inverse = Configuration ];
 

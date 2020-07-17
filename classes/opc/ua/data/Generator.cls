@@ -107,7 +107,13 @@ Method GenerateImpl() As %Status
 		
 		if (PropDef.Type = "%String") && (Node.DatabaseLength '= "") {
 			do PropDef.Parameters.SetAt(Node.DatabaseLength, "MAXLEN")
-		}	
+		}
+		
+		if Node.IsIndexed {
+			; Add an index 
+			set sc = ..AddIndex(PropDef)
+			if 'sc return sc
+		}
 	}
 	
 	; Additional methods
@@ -266,6 +272,17 @@ Method GenerateInitDataMethod(Nodes As %ListOfObjects) As %Status
 	if 'sc return sc
 	
 	return $$$OK
+}
+
+/// Adds an index on the given property
+Method AddIndex(PropDef As %Dictionary.PropertyDefinition, Node As opc.ua.config.Node) As %Status
+{
+	#dim Index As %Dictionary.IndexDefinition
+	set Index = ..GetElement(..ClassDef.Indices, "On"_PropDef.Name)
+	set PropName = PropDef.Name
+	if '$ZName(PropName, 6) set PropName = """"_PropName_""""
+	set Index.Properties = PropName
+	quit $$$OK
 }
 
 // =====
