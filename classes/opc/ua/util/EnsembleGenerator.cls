@@ -94,7 +94,7 @@ Method GenerateImpl() As %Status
 	if 'sc return sc
 	
 	; Compile compile all uncompiled classes in the package.
-	set sc = $System.OBJ.CompilePackage(..Equipment.ClassPackage, "uk-d")
+	set sc = $System.OBJ.CompilePackage(..Equipment.ClassPackage, "yuk-d")
 	if 'sc return sc
 	
 	
@@ -143,7 +143,7 @@ Method GenerateTransforming(EquipConfig As opc.ua.config.EquipmentConfiguration)
 	kill Replacements
 	set Replacements("{RuleContext}") = ProcessClass_".Context"
 	set Replacements("{ProductionName}") = ..Production.Name
-	set sc = ..CreateRule(RuleClass, "Rule", .Replacements)
+	set sc = ..CreateRule(RuleClass, "MessageRule", .Replacements)
 	if 'sc quit ..BuildStatus("Error creating rule {}", sc, RuleClass)
 	
 	; Replacement strings for DTL XData
@@ -194,7 +194,7 @@ Method GenerateServing(EquipConfig As opc.ua.config.EquipmentConfiguration) As %
 	kill Replacements
 	set Replacements("{RuleContext}") = ProcessClass_".Context"
 	set Replacements("{ProductionName}") = ..Production.Name
-	set sc = ..CreateRule(RuleClass, "Rule", .Replacements)
+	set sc = ..CreateRule(RuleClass, "MessageRule", .Replacements)
 	if 'sc quit ..BuildStatus("Error creating rule {}", sc, RuleClass)
 	
 	; Replacement strings for DTL XData
@@ -254,15 +254,21 @@ Method CreateRule(ClassName As %String, TplName As %String, ByRef Replacements A
 	set ClassDef.Super = "Ens.Rule.Definition"
 	
 	#dim Parm As %Dictionary.ParameterDefinition
-	set Parm = ..GetElement(ClassDef.Parameters, "RuleAssistClass")
-	set Parm.Default = "EnsLib.MsgRouter.RuleAssist"
-	Set Parm.SequenceNumber = $Increment(SeqNr)
+	if TplName = "RoutingRule" {
+		set Parm = ..GetElement(ClassDef.Parameters, "RuleAssistClass")
+		set Parm.Default = "EnsLib.MsgRouter.RuleAssist"
+		set Parm.SequenceNumber = $Increment(SeqNr)
+	} else {
+		set Parm = ..GetElement(ClassDef.Parameters, "RuleAssistClass")
+		set Parm.Default = "Ens.Rule.GeneralBusinessRuleAssist"
+		set Parm.SequenceNumber = $Increment(SeqNr)
+	}
 	
 	; Insert default rule definition XData block
 	set RuleDef = ##class(%Dictionary.XDataDefinition).%OpenId(..%ClassName(1)_"||"_TplName)
 	set RuleDef = RuleDef.%ConstructClone()
 	set RuleDef.Name = "RuleDefinition"
-	Set RuleDef.SequenceNumber = $Increment(SeqNr)
+	set RuleDef.SequenceNumber = $Increment(SeqNr)
 	do ClassDef.XDatas.Insert(RuleDef)
 	
 	; Handle replacements
@@ -315,9 +321,8 @@ Method CreateDTL(ClassName As %String, TplName As %String, ByRef Replacements As
 	return $$$OK
 }
 
-/// Creates the request class for all Serving business processes for
-/// the equipment. Will contain a property for each of the transforming
-/// data classes.
+/// Creates the request class for all Transforming business processes for
+/// the equipment.
 Method CreateTransformingReq(Output TransformingReqClass As %String) As %Status
 {
 	set TransformingReqClass = ..MessagePackage_"."_..Equipment.Name_"TransformingRequest"
@@ -349,27 +354,32 @@ Method CreateServingReq(Output ServingReqClass As %String) As %Status
 {
 	set ServingReqClass = ..MessagePackage_"."_..Equipment.Name_"ServingRequest"
 	
-	; Don't do anything if the class already exists
-	if ##class(%Dictionary.ClassDefinition).%ExistsId(ServingReqClass) quit $$$OK
+	if ##class(%Dictionary.ClassDefinition).%ExistsId(ServingReqClass) {
+		set ClassDef = ##class(%Dictionary.ClassDefinition).%OpenId(ServingReqClass, , .sc)
+		
+	} else {
+		set ClassDef = ##class(%Dictionary.ClassDefinition).%New(ServingReqClass, 25)
+		set ClassDef.Super = "Ens.Response"
+		
+	}
 	
-	set ClassDef = ##class(%Dictionary.ClassDefinition).%New(ServingReqClass, 25)
-	set ClassDef.Super = "Ens.Response"
-	
-	; Add property for staging data
-	set StagingDataClass = ##class(opc.ua.data.Generator).GetClassName(..StagingConfig)
+	; Add property for staging data, if not present
 	#dim PropDef As %Dictionary.PropertyDefinition
-	set PropDef = ..GetElement(ClassDef.Properties, "Staging")
-	set PropDef.Type = StagingDataClass
-	set PropDef.SequenceNumber = $Increment(SequenceNumber)
+	set PropDef = ..AddElement(ClassDef.Properties, "Staging")
+	If $IsObject(PropDef) {
+		set PropDef.Type = ##class(opc.ua.data.Generator).GetClassName(..StagingConfig)
+		set PropDef.SequenceNumber = $Increment(SequenceNumber)
+	}
 	
-	; Add properties for all transforming configurations
+	; Add properties for all transforming configurations, if not present
 	for i = 1:1:..TransformingConfigs.Count() {
 		#dim EquipConfig As opc.ua.config.EquipmentConfiguration
 		set EquipConfig = ..TransformingConfigs.GetAt(i)
-		set DataClass = ##class(opc.ua.data.Generator).GetClassName(EquipConfig)
 		set PropName = EquipConfig.Configuration.Name
-		set PropDef = ..GetElement(ClassDef.Properties, PropName)
-		set PropDef.Type = DataClass
+		set PropDef = ..AddElement(ClassDef.Properties, PropName)
+		If '$IsObject(PropDef) Continue
+		
+		set PropDef.Type = ##class(opc.ua.data.Generator).GetClassName(EquipConfig)
 		set PropDef.SequenceNumber = $Increment(SequenceNumber)
 	}
 	
@@ -389,11 +399,11 @@ Method UpdateProduction() As %Status
 	set Replacements("{ProductionName}") = ..Production.Name
 	
 	set TransformRuleClass = ..Equipment.ClassPackage_".rule.TransformRule"
-	set sc = ..CreateRule(TransformRuleClass, "Rule", .Replacements)
+	set sc = ..CreateRule(TransformRuleClass, "RoutingRule", .Replacements)
 	if 'sc quit ..BuildStatus("Error creating rule {}", sc, TransformRuleClass)
 	
 	set ServingRuleClass = ..Equipment.ClassPackage_".rule.ServingRule"
-	set sc = ..CreateRule(ServingRuleClass, "Rule", .Replacements)
+	set sc = ..CreateRule(ServingRuleClass, "RoutingRule", .Replacements)
 	if 'sc quit ..BuildStatus("Error creating rule {}", sc, ServingRuleClass)
 	
 	; Add routers, if not yet present
@@ -481,7 +491,7 @@ ClassMethod CreateProduction(Name As %String) As %Status
 		Set Prod = Tpl.%ConstructClone(1)
 		Set Prod.Name = Name
 		
-	} Else {
+	} else {
 		; If the template isn't there, create a new production class
 		set Prod = ##class(%Dictionary.ClassDefinition).%New(Name, 25)
 		set Prod.Super = "Ens.Production"
@@ -628,12 +638,22 @@ XData ServingProcess [ XMLNamespace = "http://www.intersystems.com/bpl" ]
 <sequence  >
 <rule name='Process' rule='{RuleClass}' />
 <transform name='Transform' class='{TransformClass}' source='request' target='context.Serving' />
+<assign name="Save data" property="status" value="context.Serving.%Save()" action="set"  />
 </sequence>
 </process>
 }
 
 /// Template data for the automatic generation of business rules
-XData Rule [ XMLNamespace = "http://www.intersystems.com/rule" ]
+XData MessageRule [ XMLNamespace = "http://www.intersystems.com/rule" ]
+{
+<ruleDefinition alias="" context="{RuleContext}" production="{ProductionName}">
+<ruleSet name="" effectiveBegin="" effectiveEnd="">
+</ruleSet>
+</ruleDefinition>
+}
+
+/// Template data for the automatic generation of business rules
+XData RoutingRule [ XMLNamespace = "http://www.intersystems.com/rule" ]
 {
 <ruleDefinition alias="" context="{RuleContext}" production="{ProductionName}">
 <ruleSet name="" effectiveBegin="" effectiveEnd="">
