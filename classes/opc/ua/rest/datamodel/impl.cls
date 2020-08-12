@@ -2,7 +2,7 @@ Include Ensemble
 
 /// Smart Industry datamodel generation API<br/>
 /// Business logic class defined by OpenAPI in opc.ua.rest.datamodel.spec<br/>
-/// Updated Jul 16, 2020 15:52:10
+/// Updated Aug 12, 2020 14:24:18
 Class opc.ua.rest.datamodel.impl Extends %REST.Impl [ ProcedureBlock ]
 {
 
@@ -52,6 +52,67 @@ ClassMethod PostDataModelGeneration(body As %DynamicObject) As %DynamicObject
 	Do ..%SetStatusCode(201)
 	
 	Quit ""
+}
+
+/// Generate JSON node definitions from ASD CSV input.<br/>
+/// The method arguments hold values for:<br/>
+///     input, CSV input.<br/>
+///     namespace, Namepace to use in opc_ua_node field of Node definition.<br/>
+///     machine_name, Machine name to use in opc_ua_node field of Node definition.<br/>
+ClassMethod NodeGeneration(input As %Stream.Object, namespace As %String, machinename As %String) As %DynamicObject
+{
+	Set Result = ##class(%Stream.TmpCharacter).%New()
+	
+	; Default line terminator is $c(13, 10); if posted with $c(10) we
+	; get one single line. Prevent this, we'll strip the $c(13) below.
+	Set input.LineTerminator = $c(10)
+	
+	s ^gj=input.%ClassName(1)
+	
+	; Open array
+	Do Result.Write("[")
+	
+	Set (LineCount,ObjCount) = 0
+	While 'input.AtEnd {
+		Set Line = $ZStrip(input.ReadLine(), "<>WC")
+		Set LineCount = LineCount + 1
+		If Line = "" Continue
+		
+		Set Name = $Piece($Piece(Line, ",", 1), "=", 1)
+		Set DataType = $Piece(Line, ",", 2)
+		
+		; If the datatype has an integer width/precision spec, remove it
+		If $Locate(DataType, "[^\d]+", 1, , DataType) {}
+		
+		Set Node = ##class(opc.ua.config.Node).%New()
+		Set Node.GUID = ""
+		Set Node.Name = Name
+		Set Node.DisplayName = Name
+		Set Node.NodeId = "ns="_namespace_";s="_machinename_"."_Name
+		Set Node.DatabaseAttribute = Name
+		Set Node.DatabaseType = $Case(DataType,
+		  "Real": "float",
+		  "Int": "integer",
+		  "DInt": "integer",
+		  "X": "string",
+		  : "")
+		
+		If Node.DatabaseType = "" {
+			Do ..%SetStatusCode(400)
+			Return {"error":("Unknown datatype '"_DataType_"' on line "_LineCount_".")}
+		}
+		
+		; Write object separator comma
+		If $Increment(ObjCount) > 1 Do Result.Write(",")
+		
+		; Convert to the Node JSON format and write to result
+		Do Node.%JSONExportToStream(Result)
+	}
+	
+	; Close array
+	Do Result.Write("]")
+	
+	Quit Result
 }
 
 /// Returns a HTTP 500, and places debugging information in the Ensemble
