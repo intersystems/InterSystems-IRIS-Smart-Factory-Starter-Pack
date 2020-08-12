@@ -67,8 +67,6 @@ ClassMethod NodeGeneration(input As %Stream.Object, namespace As %String, machin
 	; get one single line. Prevent this, we'll strip the $c(13) below.
 	Set input.LineTerminator = $c(10)
 	
-	s ^gj=input.%ClassName(1)
-	
 	; Open array
 	Do Result.Write("[")
 	
