@@ -1,0 +1,312 @@
+{
+	"info": {
+		"_postman_id": "8d5c4ade-e7a4-481f-8ed5-6ca2f280ffb6",
+		"name": "StarterPack example",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "New Equipment configuration",
+			"item": [
+				{
+					"name": "Add a new equipment1",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "[\r\n    {\r\n        \"name\": \"Equipment1\",\r\n        \"description\": \"Equiment1 machine\",\r\n        \"equipment_type\": {\r\n                \"name\": \"Equipment\"            \r\n            },\r\n        \"uom\": \"YD\",\r\n        \"yields\": [\r\n            {\r\n                \"name\": \"Yield1\",\r\n                \"value\": \"0\"\r\n            }    \r\n        ]\r\n    }\r\n\r\n]",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/equipment/equipments",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"equipment",
+								"equipments"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add a new STAGING configuration for equipment1",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "[\r\n    {\r\n        \"name\": \"EQ1Staging\",\r\n        \"config_type\": \"staging\",\r\n        \"description\": \"Equipment 1 staging configuration\",\r\n        \"version\": \"1\",\r\n        \"current_version\": true\r\n    }\r\n]",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/equipment/configurations",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"equipment",
+								"configurations"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add a new TRANSFORMING configuration for equipment1",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "[\r\n    {\r\n        \"name\": \"EQ1Transforming\",\r\n        \"config_type\": \"transforming\",\r\n        \"description\": \"Equipment 1 transforming configuration\",\r\n        \"version\": \"1\",\r\n        \"current_version\": true\r\n    }\r\n]",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/equipment/configurations",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"equipment",
+								"configurations"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add a new SERVING configuration for equipment1",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "[\r\n    {\r\n        \"name\": \"EQ1serving\",\r\n        \"config_type\": \"serving\",\r\n        \"description\": \"Equipment 1 serving configuration\",\r\n        \"version\": \"1\",\r\n        \"current_version\": true\r\n    }\r\n]\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/equipment/configurations",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"equipment",
+								"configurations"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Add Node to existing configuration",
+			"item": [
+				{
+					"name": "Add new nodes to the configuration EQ1staging",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "[\r\n    {\r\n        \"name\": \"Node1\",\r\n        \"display_name\": \"Node1\",\r\n        \"opc_ua_node\": \"ns=1;s=EQUIPMENT1.Node1\",\r\n        \"database_attribute\": \"Node1\",\r\n        \"database_type\": \"float\",\r\n        \"is_indexed\": false\r\n    },\r\n    {\r\n        \"name\": \"Node2\",\r\n        \"display_name\": \"Node2\",\r\n        \"opc_ua_node\": \"ns=1;s=EQUIPMENT1.Node2\",\r\n        \"database_attribute\": \"Node2\",\r\n        \"database_type\": \"float\",\r\n        \"is_indexed\": false\r\n    },\r\n    {\r\n        \"name\": \"Node3\",\r\n        \"display_name\": \"Node3\",\r\n        \"opc_ua_node\": \"ns=1;s=EQUIPMENT1.Node3\",\r\n        \"database_attribute\": \"Node3\",\r\n        \"database_type\": \"float\",\r\n        \"is_indexed\": false\r\n    }\r\n\r\n]    ",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/equipment/configurations/EQ1Staging/nodes",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"equipment",
+								"configurations",
+								"EQ1Staging",
+								"nodes"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add new nodes to the configuration EQ1Transforming",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "[\r\n    {\r\n        \"name\": \"Node1\",\r\n        \"display_name\": \"Node1\",\r\n        \"opc_ua_node\": \"\",\r\n        \"database_attribute\": \"Node1\",\r\n        \"database_type\": \"float\",\r\n        \"is_indexed\": false\r\n    },\r\n    {\r\n        \"name\": \"Node2\",\r\n        \"display_name\": \"Node2\",\r\n        \"opc_ua_node\": \"\",\r\n        \"database_attribute\": \"Node2\",\r\n        \"database_type\": \"float\",\r\n        \"is_indexed\": false\r\n    },\r\n    {\r\n        \"name\": \"Node3\",\r\n        \"display_name\": \"Node3\",\r\n        \"opc_ua_node\": \"\",\r\n        \"database_attribute\": \"Node3\",\r\n        \"database_type\": \"float\",\r\n        \"is_indexed\": false\r\n    },\r\n    {\r\n        \"name\": \"TextNode\",\r\n        \"display_name\": \"Transformation TextNode\",\r\n        \"database_attribute\": \"TextNode\",\r\n        \"database_type\": \"string\",\r\n        \"is_indexed\": true\r\n    }\r\n\r\n]  \r\n    ",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/equipment/configurations/EQ1Transforming/nodes",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"equipment",
+								"configurations",
+								"EQ1Transforming",
+								"nodes"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add new nodes to the configuration EQ1Serving",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "[\r\n    {\r\n        \"name\": \"Node1\",\r\n        \"display_name\": \"Node1\",\r\n        \"opc_ua_node\": \"\",\r\n        \"database_attribute\": \"Node1\",\r\n        \"database_type\": \"float\",\r\n        \"is_indexed\": false\r\n    },\r\n    {\r\n        \"name\": \"Node2\",\r\n        \"display_name\": \"Node2\",\r\n        \"opc_ua_node\": \"\",\r\n        \"database_attribute\": \"Node2\",\r\n        \"database_type\": \"float\",\r\n        \"is_indexed\": false\r\n    },\r\n    {\r\n        \"name\": \"Node3\",\r\n        \"display_name\": \"Node3\",\r\n        \"opc_ua_node\": \"\",\r\n        \"database_attribute\": \"Node3\",\r\n        \"database_type\": \"float\",\r\n        \"is_indexed\": false\r\n    },\r\n    {\r\n        \"name\": \"Node5\",\r\n        \"display_name\": \"Serving Node5\",\r\n        \"database_attribute\": \"Node5\",\r\n        \"database_type\": \"integer\",\r\n        \"is_indexed\": false\r\n    }\r\n\r\n]  ",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/equipment/configurations/EQ1Serving/nodes",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"equipment",
+								"configurations",
+								"EQ1Serving",
+								"nodes"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Datamodel generation",
+			"item": [
+				{
+					"name": "Convert node CSV",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "text/plain;charset=UTF-8",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "Node1,Real\nNode2,Real\nNode3,Real\nNode4,X\nNode5,Int",
+							"options": {
+								"raw": {
+									"language": "text"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/datamodel/nodegen?namespace=1&machine_name=EQUIPMENT1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"datamodel",
+								"nodegen"
+							],
+							"query": [
+								{
+									"key": "namespace",
+									"value": "1"
+								},
+								{
+									"key": "machine_name",
+									"value": "EQUIPMENT1"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Generate Equipment1 data model + ensemble",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"equipment_name\": \"Equipment1\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/datamodel/datamodels",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"datamodel",
+								"datamodels"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		}
+	],
+	"protocolProfileBehavior": {}
+}

@@ -44,19 +44,38 @@ Go in the Management Portal to System Administration -> Security -> Applications
 
 ### DataModel 
 
-Create a new application
 * Name -  /api/v1/datamodel
 * Dispatch Class - opc.ua.rest.datamodel.disp
 * Security Settings - Unauthenticated 
 
 ![Datamodel webapplication configuration](images/DataModelWebAppConfig.PNG)
-
+![Datamodel webapplication application roles](images/ApplicationRolesWebAppConfig.PNG)
 
 
 ### Equipment 
 
+* Name - /api/v1/equipment
+* Dispatch Class - opc.ua.rest.equipment.disp
+* Security Settings - Unauthenticated
+
+![Datamodel webapplication configuration](images/EquipmentWebAppConfig.PNG)
+![Datamodel webapplication application roles](images/ApplicationRolesWebAppConfig.PNG)
+
 ### Master data
 
-## Open the StarterProject in PostMan
+* Name - /api/v1/masterdata
+* Dispatch Class - opc.ua.rest.masterdata.disp
+* Security Settings - Unauthenticated
+
+![Datamodel webapplication configuration](images/MasterDataWebAppConfig.PNG)
+![Datamodel webapplication application roles](images/ApplicationRolesWebAppConfig.PNG)
+
+## Postman StarterProject
+
+There are 2 postman projects available that you can import in postman to get you started.
+
+ * StarterPack collection consists of all available URL's within the Rest Services
+ * StarterPack example collection is a simple example to get you up and running with a simple 3 layer (staging, transformation and serving) setup for 1 equipment and some nodes.
+ * The StarterPack Development enviroment for running the projects locally  
 
 
