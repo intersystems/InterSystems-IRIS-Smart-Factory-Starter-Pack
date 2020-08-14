@@ -49,7 +49,7 @@ Create a new application
 * Dispatch Class - opc.ua.rest.datamodel.disp
 * Security Settings - Unauthenticated 
 
-![Datamodel webapplication configuration] https://github.com/intersystems/asp-oee/images/DataModelWebAppConfig.PNG
+![Datamodel webapplication configuration] (https://github.com/intersystems/asp-oee/blob/master/images/DataModelWebAppConfig.PNG)
 
 
 
