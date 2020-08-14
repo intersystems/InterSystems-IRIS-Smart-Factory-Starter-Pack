@@ -6,7 +6,7 @@ Application Starter Pack for manufacturing companies using OPC-UA for OEE Dashbo
 4. 	API for sending information to PowerBI using the Push DataSet interface
 5. 	Integration example with JD Edwards
 
-The Starter Pack is used within a project in a manufacturing plant to give operators realtime insight in OEE and other custom metrics witihin there process. For more information about the functional and technical working see the Wiki [link] https://github.com/intersystems/asp-oee/wiki of the project.
+The Starter Pack is used within a project in a manufacturing plant to give operators realtime insight in OEE and other custom metrics witihin there process. For more information about the functional and technical working see the Wiki https://github.com/intersystems/asp-oee/wiki of the project.
 
 # Structure
 The repository has been separated in 4 parts.
@@ -24,14 +24,14 @@ The images used within the Wiki
 PostMan projects to get started quickly with this project
 
 ## Python
-This solution uses the Intersystems Python Gateway [link] https://openexchange.intersystems.com/package/PythonGateway with the free OPC-UA library [link] https://github.com/FreeOpcUa/opcua-asyncio
+This solution uses the Intersystems Python Gateway https://openexchange.intersystems.com/package/PythonGateway with the free OPC-UA library  https://github.com/FreeOpcUa/opcua-asyncio
 
 # Getting started
 
-1. Install the InterSystems Python Gateway [link] https://openexchange.intersystems.com/package/PythonGateway
-2. Install the InterSystems classes. This can be easily done by using this tool [link] https://github.com/gertjanklein/iris-export-builder
+1. Install the InterSystems Python Gateway https://openexchange.intersystems.com/package/PythonGateway
+2. Install the InterSystems classes. This can be easily done by using this tool https://github.com/gertjanklein/iris-export-builder
 3. Install the python code in a directory / virtual environment on your machine and get the requirements by running 
-    pip install -r requirements.txt
+   ```pip install -r requirements.txt```
 
 
 
