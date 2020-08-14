@@ -36,6 +36,7 @@ This solution uses the Intersystems Python Gateway https://openexchange.intersys
 3. Install the python code in a directory on your machine and get the requirements by running 
    ```pip install -r requirements.txt```
 4. Install Postman (https://www.postman.com/downloads/)
+5. Optionally you can load the masterdata that is provided in the masterdata directory in the corresponding opc.ua.config.* table
 
 ## Initial configuration
 
