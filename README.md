@@ -28,11 +28,35 @@ This solution uses the Intersystems Python Gateway https://openexchange.intersys
 
 # Getting started
 
+## Installation
+
+1. Create a namespace with the name OEESP
 1. Install the InterSystems Python Gateway https://openexchange.intersystems.com/package/PythonGateway
 2. Install the InterSystems classes. This can be easily done by using this tool https://github.com/gertjanklein/iris-export-builder
-3. Install the python code in a directory / virtual environment on your machine and get the requirements by running 
+3. Install the python code in a directory on your machine and get the requirements by running 
    ```pip install -r requirements.txt```
+4. Install Postman (https://www.postman.com/downloads/)
+
+## Initial configuration
+
+Before we can really use the solution we need to create manually the webapplications. 
+Go in the Management Portal to System Administration -> Security -> Applications -> Web Applications
+
+### DataModel 
+
+Create a new application
+* Name -  /api/v1/datamodel
+* Dispatch Class - opc.ua.rest.datamodel.disp
+* Security Settings - Unauthenticated 
+
+![Datamodel webapplication configuration] https://github.com/intersystems/asp-oee/images/DataModelWebAppConfig.PNG
 
 
+
+### Equipment 
+
+### Master data
+
+## Open the StarterProject in PostMan
 
 
