@@ -9,13 +9,13 @@ Application Starter Pack for manufacturing companies using OPC-UA for OEE Dashbo
 The Starter Pack is used within a project in a manufacturing plant to give operators realtime insight in OEE and other custom metrics witihin there process. For more information about the functional and technical working see the Wiki [link] https://github.com/intersystems/asp-oee/wiki of the project.
 
 # Structure
-The repository containes the following folders:
+The repository has been separated in 4 parts.
 
 ## Classes
 The source of this solution divided in:
-1. JDE integration sources
-2. OPC-UA generation framework
-3. PowerBI push dataset integration
+* JDE integration sources
+* OPC-UA generation framework
+* PowerBI push dataset integration
 
 ## Images
 The images used within the Wiki
@@ -24,8 +24,15 @@ The images used within the Wiki
 PostMan projects to get started quickly with this project
 
 ## Python
-This solution uses the python gateway with the free OPC-UA library [link] https://github.com/FreeOpcUa/opcua-asyncio
+This solution uses the Intersystems Python Gateway [link] https://openexchange.intersystems.com/package/PythonGateway with the free OPC-UA library [link] https://github.com/FreeOpcUa/opcua-asyncio
 
-# Getting 
+# Getting started
+
+1. Install the InterSystems Python Gateway [link] https://openexchange.intersystems.com/package/PythonGateway
+2. Install the InterSystems classes. This can be easily done by using this tool [link] https://github.com/gertjanklein/iris-export-builder
+3. Install the python code in a directory / virtual environment on your machine and get the requirements by running 
+    pip install -r requirements.txt
+
+
 
 
