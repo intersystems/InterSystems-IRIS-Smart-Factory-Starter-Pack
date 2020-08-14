@@ -51,7 +51,6 @@ Go in the Management Portal to System Administration -> Security -> Applications
 ![Datamodel webapplication configuration](images/DataModelWebAppConfig.PNG)
 ![Datamodel webapplication application roles](images/ApplicationRolesWebAppConfig.PNG)
 
-
 ### Equipment 
 
 * Name - /api/v1/equipment
@@ -77,5 +76,9 @@ There are 2 postman projects available that you can import in postman to get you
  * StarterPack collection consists of all available URL's within the Rest Services
  * StarterPack example collection is a simple example to get you up and running with a simple 3 layer (staging, transformation and serving) setup for 1 equipment and some nodes.
  * The StarterPack Development enviroment for running the projects locally  
+
+# Tutorial
+
+The wiki (https://github.com/intersystems/asp-oee/wiki/Tutorial) of this repository has a tutorial that explaines the example that has been delivered as a PostMan project and how to use & update the generated model.
 
 
