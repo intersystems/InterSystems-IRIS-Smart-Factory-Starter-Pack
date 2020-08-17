@@ -15,7 +15,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "[\r\n    {\r\n        \"name\": \"MARCOMACHINE2\",\r\n        \"description\": \"MARCO machine\",\r\n        \"equipment_type\": {\r\n                \"name\": \"GIP\"            \r\n            },\r\n        \"uom\": \"YD\",\r\n        \"yields\": [\r\n            {\r\n                \"name\": \"test\",\r\n                \"value\": \"123\"\r\n            }    \r\n        ]\r\n    }\r\n\r\n]",
+							"raw": "[\r\n    {\r\n        \"name\": \"MARCOMACHINE5\",\r\n        \"description\": \"MARCO machine\",\r\n        \"equipment_type\": {\r\n                \"name\": \"GIP\"            \r\n            },\r\n        \"uom\": \"YD\",\r\n        \"yields\": [\r\n            {\r\n                \"name\": \"test\",\r\n                \"value\": \"123\"\r\n            }    \r\n        ]\r\n    }\r\n\r\n]",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -23,7 +23,7 @@
 							}
 						},
 						"url": {
-							"raw": "{{base_url}}/api/v1/equipment/equipments/",
+							"raw": "{{base_url}}/api/v1/equipment/equipments",
 							"host": [
 								"{{base_url}}"
 							],
@@ -31,8 +31,7 @@
 								"api",
 								"v1",
 								"equipment",
-								"equipments",
-								""
+								"equipments"
 							]
 						}
 					},
@@ -190,7 +189,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "[\r\n    {\r\n        \"name\": \"MARCOCONFIGTEST\",\r\n        \"config_type\": \"serving\",\r\n        \"description\": \"MARCOCONFIGTEST\",\r\n        \"version\": \"1\",\r\n        \"current_version\": true\r\n    }\r\n]",
+							"raw": "[\r\n    {\r\n        \"name\": \"MARCOCONFIGTEST\",\r\n        \"config_type\": \"serving\",\r\n        \"description\": \"MARCOCONFIGTEST\",\r\n        \"version\": \"1\",\r\n        \"current_version\": true,\r\n        \"standard_oee_fields\": false\r\n    }\r\n]",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -198,7 +197,7 @@
 							}
 						},
 						"url": {
-							"raw": "{{base_url}}/api/v1/equipment/configurations/",
+							"raw": "{{base_url}}/api/v1/equipment/configurations",
 							"host": [
 								"{{base_url}}"
 							],
@@ -206,8 +205,7 @@
 								"api",
 								"v1",
 								"equipment",
-								"configurations",
-								""
+								"configurations"
 							]
 						}
 					},
@@ -270,6 +268,37 @@
 								"MARCOCONFIGTEST",
 								"nodes",
 								"06081036-D766-487F-8F49-F890CCB53F7E"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add new nodes directly to the specified configuration",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "[\r\n    {\r\n        \"name\": \"confignode1\",\r\n        \"display_name\": \"confignode1\",\r\n        \"opc_ua_node\": \"ns=4;s=GIP03PLC0050-SV.MARCOTESTNODE\",\r\n        \"database_attribute\": \"confignode1\",\r\n        \"database_type\": \"integer\",\r\n        \"is_indexed\": false\r\n    },\r\n    {\r\n        \"name\": \"confignode2\",\r\n        \"display_name\": \"confignode2\",\r\n        \"opc_ua_node\": \"ns=4;s=GIP03PLC0050-SV.MARCOTESTNODE\",\r\n        \"database_attribute\": \"confignode2\",\r\n        \"database_type\": \"integer\",\r\n        \"is_indexed\": false\r\n    }\r\n]    ",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/equipment/configurations/MARCOCONFIGTEST/nodes",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"equipment",
+								"configurations",
+								"MARCOCONFIGTEST",
+								"nodes"
 							]
 						}
 					},
@@ -359,7 +388,7 @@
 							}
 						},
 						"url": {
-							"raw": "{{base_url}}/api/v1/equipment/nodes/",
+							"raw": "{{base_url}}/api/v1/equipment/nodes",
 							"host": [
 								"{{base_url}}"
 							],
@@ -367,8 +396,7 @@
 								"api",
 								"v1",
 								"equipment",
-								"nodes",
-								""
+								"nodes"
 							]
 						}
 					},
@@ -559,6 +587,53 @@
 								"masterdata",
 								"oeebenchmarks"
 							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Datamodel",
+			"item": [
+				{
+					"name": "Generate Node JSON structure",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/datamodel/nodegen?namespace=[namespace]&machine_name=[machine name]",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"datamodel",
+								"nodegen"
+							],
+							"query": [
+								{
+									"key": "namespace",
+									"value": "[namespace]"
+								},
+								{
+									"key": "machine_name",
+									"value": "[machine name]"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Generate equipment datamodel",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": ""
 						}
 					},
 					"response": []
