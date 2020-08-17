@@ -67,6 +67,29 @@
 					"response": []
 				},
 				{
+					"name": "Add configuration EQ1Staging to Equipment1",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/equipment/equipments/Equipment1/configurations/EQ1Staging",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"equipment",
+								"equipments",
+								"Equipment1",
+								"configurations",
+								"EQ1Staging"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Add a new TRANSFORMING configuration for equipment1",
 					"request": {
 						"method": "POST",
@@ -96,6 +119,29 @@
 					"response": []
 				},
 				{
+					"name": "Add configuration EQ1Transforming to Equipment1",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/equipment/equipments/Equipment1/configurations/EQ1Transforming",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"equipment",
+								"equipments",
+								"Equipment1",
+								"configurations",
+								"EQ1Transforming"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Add a new SERVING configuration for equipment1",
 					"request": {
 						"method": "POST",
@@ -119,6 +165,29 @@
 								"v1",
 								"equipment",
 								"configurations"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add configuration EQ1Serving to Equipment1",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/equipment/equipments/Equipment1/configurations/EQ1Transforming",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"equipment",
+								"equipments",
+								"Equipment1",
+								"configurations",
+								"EQ1Transforming"
 							]
 						}
 					},
