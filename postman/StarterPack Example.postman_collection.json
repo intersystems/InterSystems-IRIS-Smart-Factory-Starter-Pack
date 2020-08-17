@@ -44,7 +44,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "[\r\n    {\r\n        \"name\": \"EQ1Staging\",\r\n        \"config_type\": \"staging\",\r\n        \"description\": \"Equipment 1 staging configuration\",\r\n        \"version\": \"1\",\r\n        \"current_version\": true\r\n    }\r\n]",
+							"raw": "[\r\n    {\r\n        \"name\": \"EQ1Staging\",\r\n        \"config_type\": \"staging\",\r\n        \"description\": \"Equipment 1 staging configuration\",\r\n        \"version\": \"1\",\r\n        \"current_version\": true,\r\n        \"standard_oee_fields\": false\r\n    }\r\n]",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -73,7 +73,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "[\r\n    {\r\n        \"name\": \"EQ1Transforming\",\r\n        \"config_type\": \"transforming\",\r\n        \"description\": \"Equipment 1 transforming configuration\",\r\n        \"version\": \"1\",\r\n        \"current_version\": true\r\n    }\r\n]",
+							"raw": "[\r\n    {\r\n        \"name\": \"EQ1Transforming\",\r\n        \"config_type\": \"transforming\",\r\n        \"description\": \"Equipment 1 transforming configuration\",\r\n        \"version\": \"1\",\r\n        \"current_version\": true,\r\n        \"standard_oee_fields\": false\r\n    }\r\n]",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -102,7 +102,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "[\r\n    {\r\n        \"name\": \"EQ1serving\",\r\n        \"config_type\": \"serving\",\r\n        \"description\": \"Equipment 1 serving configuration\",\r\n        \"version\": \"1\",\r\n        \"current_version\": true\r\n    }\r\n]\r\n",
+							"raw": "[\r\n    {\r\n        \"name\": \"EQ1serving\",\r\n        \"config_type\": \"serving\",\r\n        \"description\": \"Equipment 1 serving configuration\",\r\n        \"version\": \"1\",\r\n        \"current_version\": true,\r\n        \"standard_oee_fields\": true\r\n    }\r\n]\r\n",
 							"options": {
 								"raw": {
 									"language": "json"
