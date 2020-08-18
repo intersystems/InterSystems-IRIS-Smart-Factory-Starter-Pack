@@ -421,6 +421,7 @@ Method UpdateProduction() As %Status
 	; Add services for equipment, if not yet present
 	
 	set EquipmentName = ..Equipment.Name
+	set StagingConfigName = ..StagingConfig.Configuration.Name
 	
 	set Name = EquipmentName_"Data"
 	set Settings($i(Settings)) = $lb("Host", "TargetConfigNames", "TransformRouter")
@@ -429,11 +430,15 @@ Method UpdateProduction() As %Status
 	
 	set Name = EquipmentName_"ReplayService"
 	set Settings($i(Settings)) = $lb("Host", "TargetConfigNames", "TransformRouter")
+	set Settings($i(Settings)) = $lb("Host", "Equipment", EquipmentName)
+	set Settings($i(Settings)) = $lb("Host", "Configuration", StagingConfigName)
 	set sc = ..AddProductionItem(Name, "opc.ua.service.ReplayDataService", .Settings, 0)
 	if 'sc return ..BuildStatus("Error adding {} to production:", sc, Name)
 	
 	set Name = EquipmentName_"Subscription"
 	set Settings($i(Settings)) = $lb("Host", "TargetConfigNames", "TransformRouter")
+	set Settings($i(Settings)) = $lb("Host", "Equipment", EquipmentName)
+	set Settings($i(Settings)) = $lb("Host", "Configuration", StagingConfigName)
 	set sc = ..AddProductionItem(Name, "opc.ua.service.SubscriptionService", .Settings, 0)
 	if 'sc return ..BuildStatus("Error adding {} to production:", sc, Name)
 	
