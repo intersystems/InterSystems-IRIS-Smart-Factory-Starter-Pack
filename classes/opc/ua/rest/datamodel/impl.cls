@@ -82,16 +82,19 @@ ClassMethod NodeGeneration(input As %Stream.Object, namespace As %String, machin
 		; If the datatype has an integer width/precision spec, remove it
 		If $Locate(DataType, "[^\d]+", 1, , DataType) {}
 		
+		; TBD: make this more robust
+		Set Attribute = $Translate(Name, "- ")
+		
 		Set Node = ##class(opc.ua.config.Node).%New()
 		Set Node.GUID = ""
 		Set Node.Name = Name
 		Set Node.DisplayName = Name
 		Set Node.NodeId = "ns="_namespace_";s="_machinename_"."_Name
-		Set Node.DatabaseAttribute = Name
-		Set Node.DatabaseType = $Case(DataType,
-		  "Real": "float",
-		  "Int": "integer",
-		  "DInt": "integer",
+		Set Node.DatabaseAttribute = Attribute
+		Set Node.DatabaseType = $Case($ZConvert(DataType, "U"),
+		  "REAL": "float",
+		  "INT": "integer",
+		  "DINT": "integer",
 		  "X": "string",
 		  : "")
 		
