@@ -1,5 +1,6 @@
 # ASP - OEE Dashboard
-Application Starter Pack for manufacturing companies using OPC-UA for OEE Dashboard. The Starter Pack is a generic framework for fast generation and consists of :
+Application Starter Pack for manufacturing companies using OPC-UA for OEE Dashboard.
+The Starter Pack is a generic framework for fast generation and consists of :
 1.  API for managing master data
 2. 	API for equipment setup with there related data from the PLC
 3. 	API for datastructure generation
@@ -80,6 +81,6 @@ There are 2 postman projects available that you can import in postman to get you
 
 # Tutorial
 
-The wiki (https://github.com/intersystems/asp-oee/wiki/Tutorial) of this repository has a tutorial that explaines the example that has been delivered as a PostMan project and how to use & update the generated model.
+The wiki (https://github.com/intersystems/asp-oee/wiki/Tutorial) of this repository has a tutorial that explains the example that has been delivered as a PostMan project and how to use & update the generated model.
 
 
