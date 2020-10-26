@@ -50,8 +50,8 @@ Go in the Management Portal to System Administration -> Security -> Applications
 * Dispatch Class - opc.ua.rest.datamodel.disp
 * Security Settings - Unauthenticated 
 
-![Datamodel webapplication configuration](images/DataModelWebAppConfig.PNG)
-![Datamodel webapplication application roles](images/ApplicationRolesWebAppConfig.PNG)
+![Datamodel webapplication configuration](https://raw.githubusercontent.com/intersystems/IRIS-Smart-Factory-Starter-Pack/master/images/DataModelWebAppConfig.PNG)
+![Datamodel webapplication application roles](https://raw.githubusercontent.com/intersystems/IRIS-Smart-Factory-Starter-Pack/master/images/ApplicationRolesWebAppConfig.PNG)
 
 ### Equipment 
 
