@@ -1,4 +1,4 @@
-# ASP - OEE Dashboard
+# IRIS Smart Factory Starter Pack
 Application Starter Pack for manufacturing companies using OPC-UA for OEE Dashboard.
 The Starter Pack is a generic framework for fast generation and consists of :
 1.  API for managing master data
