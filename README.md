@@ -2,18 +2,18 @@
 Application Starter Pack for manufacturing companies using OPC-UA for OEE Dashboard.
 The Starter Pack is a generic framework for fast generation and consists of :
 1.  API for managing master data
-2. 	API for equipment setup with there related data from the PLC
+2. 	API for equipment setup with their related data from the PLC
 3. 	API for datastructure generation
 4. 	API for sending information to PowerBI using the Push DataSet interface
 5. 	Integration example with JD Edwards
 
-The Starter Pack is used within a project in a manufacturing plant to give operators realtime insight in OEE and other custom metrics witihin there process. For more information about the functional and technical working see the Wiki https://github.com/intersystems/asp-oee/wiki of the project.
+The Starter Pack is used within a project in a manufacturing plant to give operators realtime insight in OEE and other custom metrics witihin their process. For more information about the functional and technical working see the Wiki https://github.com/intersystems/asp-oee/wiki of the project.
 
 # Structure
-The repository has been separated in 4 parts.
+The repository has been separated into 4 parts.
 
 ## Classes
-The source of this solution divided in:
+The source of this solution divided into:
 * JDE integration sources
 * OPC-UA generation framework
 * PowerBI push dataset integration
@@ -25,7 +25,7 @@ The images used within the Wiki
 PostMan projects to get started quickly with this project
 
 ## Python
-This solution uses the Intersystems Python Gateway https://openexchange.intersystems.com/package/PythonGateway with the free OPC-UA library  https://github.com/FreeOpcUa/opcua-asyncio
+This solution uses the InterSystems Python Gateway https://openexchange.intersystems.com/package/PythonGateway with the free OPC-UA library  https://github.com/FreeOpcUa/opcua-asyncio
 
 # Getting started
 
@@ -77,7 +77,7 @@ There are 2 postman projects available that you can import in postman to get you
 
  * StarterPack collection consists of all available URL's within the Rest Services
  * StarterPack example collection is a simple example to get you up and running with a simple 3 layer (staging, transformation and serving) setup for 1 equipment and some nodes.
- * The StarterPack Development enviroment for running the projects locally  
+ * The StarterPack Development environment for running the projects locally  
 
 # Tutorial
 
