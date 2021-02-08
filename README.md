@@ -1,4 +1,7 @@
 # IRIS Smart Factory Starter Pack
+
+NOTE: ⚠️ This application is not supported by InterSystems Corporation. Use it at your own risk.
+
 Application Starter Pack for manufacturing companies using OPC-UA for OEE Dashboard.
 The Starter Pack is a generic framework for fast generation and consists of :
 1.  API for managing master data
