@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="Cache" version="25">
+<Document name="Smart-Factory-Starter-Pack.ZPM">
+<Module>
+ <Name>Smart-Factory-Starter-Pack</Name>
+  <Version>1.0.0</Version>
+  <Description>The Starter Pack is used within a project in a manufacturing plant to give operators realtime insight in OEE.</Description>
+  <Keywords>Starter Pack</Keywords>
+  <Packaging>module</Packaging>
+   <SourcesRoot>classes</SourcesRoot>
+  <Resource Name="Jde.PKG" Directory="cls"/>
+  <Resource Name="opc.PKG" Directory="cls"/>
+  <Resource Name="powerbi.PKG" Directory="cls"/>
+</Module>
+</Document>
+</Export>
