@@ -11,6 +11,12 @@
   <Resource Name="Jde.PKG" Directory="cls"/>
   <Resource Name="opc.PKG" Directory="cls"/>
   <Resource Name="powerbi.PKG" Directory="cls"/>
+  <CSPApplication
+            Url="/api/v1/datamodel"
+            CookiePath="/api/v1/datamodel"
+            UnauthenticatedEnabled="1"
+            MatchRoles=":${dbrole}"
+            DispatchClass="opc.ua.rest.datamodel.disp"/>
 </Module>
 </Document>
 </Export>
