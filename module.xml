@@ -8,7 +8,7 @@
   <Keywords>Starter Pack</Keywords>
   <Packaging>module</Packaging>
    <SourcesRoot>classes</SourcesRoot>
-  <Resource Name="Jde.PKG" Directory="cls"/>
+  <Resource Name="JDE.PKG" Directory="cls"/>
   <Resource Name="opc.PKG" Directory="cls"/>
   <Resource Name="powerbi.PKG" Directory="cls"/>
   <CSPApplication
