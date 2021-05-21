@@ -13,10 +13,22 @@
   <Resource Name="powerbi.PKG" Directory="cls"/>
   <CSPApplication
             Url="/api/v1/datamodel"
-            CookiePath="/api/v1/datamodel"
+            CookiePath="/api/v1/datamodel/"
             UnauthenticatedEnabled="1"
-            MatchRoles=":${dbrole}"
+            MatchRoles=":${dbrole}SECONDARY"
             DispatchClass="opc.ua.rest.datamodel.disp"/>
+  <CSPApplication
+            Url="/api/v1/equipment"
+            CookiePath="/api/v1/equipment/"
+            UnauthenticatedEnabled="1"
+            MatchRoles=":${dbrole}SECONDARY"
+            DispatchClass="opc.ua.rest.equipment.disp"/>
+  <CSPApplication
+            Url="/api/v1/masterdata"
+            CookiePath="/api/v1/masterdata/"
+            UnauthenticatedEnabled="1"
+            MatchRoles=":${dbrole}SECONDARY"
+            DispatchClass="opc.ua.rest.masterdata.disp"/>
 </Module>
 </Document>
 </Export>
